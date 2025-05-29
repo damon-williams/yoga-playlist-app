@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoga Playlist Generator</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script>
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);var n=t;if("undefined"!=typeof e)try{n=t[e]}catch(r){}return n}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+    posthog.init('phc_wANN8fAdn8bek8ZzbcZpZGOzRp6TfOfVPvW7CKq3B6m',{api_host:'https://app.posthog.com'})
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🧘‍♀️ Yoga Playlist Generator</h1>
+            <p>Create personalized playlists for your yoga classes using AI agents</p>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">Backend:</span>
+                <span id="backend-status" class="status-value">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Spotify:</span>
+                <span id="spotify-status" class="status-value">Checking...</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="input-panel">
+                <h2>Create Your Playlist</h2>
+                
+                <form id="playlist-form">
+                    <div class="form-group">
+                        <label for="class-type">Yoga Class Type</label>
+                        <select id="class-type" required>
+                            <option value="">Loading classes...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="music-preferences">Music Style & Preferences</label>
+                        <textarea id="music-preferences" placeholder="e.g., 90s-00s hip-hop artists like Tupac, Biggie, Lauryn Hill" required></textarea>
+                        <small class="help-text">Describe your preferred music style, artists, or genres</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="duration">Class Duration: <span id="duration-display">60</span> minutes</label>
+                        <input type="range" id="duration" min="30" max="90" value="60" step="15">
+                        <div class="duration-labels">
+                            <span>30min</span>
+                            <span>45min</span>
+                            <span>60min</span>
+                            <span>75min</span>
+                            <span>90min</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="generate-btn" class="generate-btn">
+                        <span class="btn-text">Generate Playlist</span>
+                        <span class="btn-loading">🔄 Generating...</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="output-panel">
+                <div id="output-content">
+                    <div class="placeholder">
+                        <h3>Your Playlist Will Appear Here</h3>
+                        <p>Fill out the form and click "Generate Playlist" to create your custom yoga playlist.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="export-section" class="export-section" style="display: none;">
+            <div class="export-panel">
+                <h3>🎵 Export to Spotify</h3>
+                <p>Your playlist is ready! Click below to create it in your Spotify account.</p>
+                <div class="export-controls">
+                    <input type="text" id="playlist-name" placeholder="Enter playlist name" value="">
+                    <button id="export-btn" class="export-btn">Create Spotify Playlist</button>
+                </div>
+                <div id="export-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
