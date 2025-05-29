@@ -1,5 +1,6 @@
 def handler(request):
     return {
         'statusCode': 200,
-        'body': 'Hello from Python API!'
+        'headers': {'Content-Type': 'application/json'},
+        'body': '{"message": "Hello from Python!"}'
     }
