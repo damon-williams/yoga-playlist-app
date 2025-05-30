@@ -106,13 +106,13 @@ class handler(BaseHTTPRequestHandler):
                                                   
         Format:
         WARMUP (X minutes)
-        Artist - Song Title
+        - Artist - Song Title
         
         FLOW/ACTIVE (X minutes)
-        Artist - Song Title
+        - Artist - Song Title
         
         COOLDOWN/SAVASANA (X minutes)
-        Artist - Song Title
+        - Artist - Song Title
         """)
         
         chain = prompt | llm
