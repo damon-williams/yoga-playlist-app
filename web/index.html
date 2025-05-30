@@ -14,7 +14,7 @@
     <div class="container">
         <header class="header">
             <h1>🧘‍♀️ Yoga Playlist Generator</h1>
-            <p>Create personalized playlists for your yoga classes</p>
+            <p>Create personalized playlists for your classes</p>
         </header>
 
         <!-- Success/Status Message Area (replaces status bar) -->
@@ -28,7 +28,7 @@
                 
                 <form id="playlist-form">
                     <div class="form-group">
-                        <label for="class-type">Yoga Class Type</label>
+                        <label for="class-type">Class Type</label>
                         <select id="class-type" required>
                             <option value="">Loading classes...</option>
                         </select>
@@ -36,8 +36,7 @@
 
                     <div class="form-group">
                         <label for="music-preferences">Music Style & Preferences</label>
-                        <textarea id="music-preferences" placeholder="e.g., 90s-00s hip-hop artists like Tupac, Biggie, Lauryn Hill" required></textarea>
-                        <small class="help-text">Describe your preferred music style, artists, or genres</small>
+                        <textarea id="music-preferences" placeholder="Provide direction to the AI on the playlist" required></textarea>
                     </div>
 
                     <div class="form-group">
@@ -63,7 +62,7 @@
                 <div id="output-content">
                     <div class="placeholder">
                         <h3>Your Playlist Will Appear Here</h3>
-                        <p>Fill out the form and click "Generate Playlist" to create your custom yoga playlist.</p>
+                        <p>Fill out the form and click "Generate Playlist" to create your custom playlist.</p>
                     </div>
                 </div>
             </div>

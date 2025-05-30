@@ -421,7 +421,7 @@ async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authC
         const data = await response.json();
         
         if (data.success) {
-            showSuccessMessage(`🎉 Success! Created playlist "${playlistName}" with ${data.tracks_added} tracks. <a href="${data.playlist_url}" target="_blank">Open in Spotify</a>`);
+            showSuccessMessage(`🎉 Success! Created playlist "${playlistName}". <a href="${data.playlist_url}" target="_blank">Open in Spotify</a>`);
             localStorage.removeItem('pendingPlaylist');
         } else {
             showSuccessMessage(`❌ Error: ${data.error}`, true);
