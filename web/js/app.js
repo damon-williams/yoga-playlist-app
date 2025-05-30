@@ -310,17 +310,16 @@ async function handlePlaylistGeneration(event) {
     };
 
     // Validate form
-    if (!formData.class_name || !formData.music_preferences) {
+    if (!formData.class_name) {
         // Track validation error
         posthog.capture('playlist_generation_error', {
             error_type: 'validation',
             missing_fields: {
-                class_name: !formData.class_name,
-                music_preferences: !formData.music_preferences
+                class_name: !formData.class_name
             }
         });
 
-        alert('Please fill in all required fields');
+        alert('Please select a class type');
         return;
     }
     

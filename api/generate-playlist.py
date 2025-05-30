@@ -18,7 +18,7 @@ class handler(BaseHTTPRequestHandler):
             return
         
         # Validate required fields
-        required_fields = ['class_name', 'music_preferences', 'duration']
+        required_fields = ['class_name', 'duration']
         for field in required_fields:
             if field not in data:
                 self._send_error(f"Missing required field: {field}", 400)
@@ -26,7 +26,7 @@ class handler(BaseHTTPRequestHandler):
 
         class_name = data['class_name']
         class_description = data.get('class_description', '')
-        music_preferences = data['music_preferences']
+        music_preferences = data['music_preferences', 'any style appropriate for yoga']
         duration = int(data['duration'])
         
         try:
