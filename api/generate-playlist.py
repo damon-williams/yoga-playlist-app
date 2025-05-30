@@ -90,18 +90,17 @@ class handler(BaseHTTPRequestHandler):
         Duration: {duration} minutes
         Music Preferences: {music_preferences}
         
+        Ensure the playlist contains enough tracks to cover the entire class duration, with appropriate BPM and energy levels for each section.
+                                                  
         Format:
-        **WARMUP (X minutes)**
-        BPM: XX-XX | Energy: Description
-        - Artist - Song Title
+        WARMUP (X minutes)
+        Artist - Song Title
         
-        **FLOW/ACTIVE (X minutes)**
-        BPM: XX-XX | Energy: Description  
-        - Artist - Song Title
+        FLOW/ACTIVE (X minutes)
+        Artist - Song Title
         
-        **COOLDOWN/SAVASANA (X minutes)**
-        BPM: XX-XX | Energy: Description
-        - Artist - Song Title
+        COOLDOWN/SAVASANA (X minutes)
+        Artist - Song Title
         """)
         
         chain = prompt | llm

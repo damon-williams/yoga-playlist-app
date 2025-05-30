@@ -492,8 +492,7 @@ function showExportSection(className) {
     const exportPanel = document.querySelector('.export-panel');
     exportPanel.innerHTML = `
         <h3>🎵 Export to Spotify</h3>
-        <p><strong>Spotify Integration:</strong> ${spotifyInfo}</p>
-        <p>Your playlist is ready! Click below to create it in your Spotify account.</p>
+        <p>${spotifyInfo}</p>
         <div class="export-controls">
             <label for="playlist-name">Playlist Name:</label>
             <input type="text" id="playlist-name" placeholder="Enter playlist name" value="${playlistNameInput.value}">
@@ -597,15 +596,11 @@ async function initiateSpotifyAuth(playlistName, trackIds) {
             currentExportResult.className = 'info';
             currentExportResult.innerHTML = `
                 <strong>🎵 Spotify Authorization Required</strong><br>
-                Click the button below to authorize with Spotify, then return to create your playlist.
+                Click the button below to authorize with Spotify.
                 <br><br>
                 <a href="${data.auth_url}" class="spotify-auth-btn">
                     Authorize with Spotify
                 </a>
-                <br><br>
-                <button onclick="checkForSpotifyReturn()" class="check-return-btn">
-                    I've Authorized - Create Playlist Now
-                </button>
             `;
             
         } else {
