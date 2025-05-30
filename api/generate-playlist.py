@@ -1,5 +1,11 @@
 from http.server import BaseHTTPRequestHandler
 import json
+import os
+import sys
+
+# Add paths for importing agents
+sys.path.append('/tmp')
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -24,21 +30,41 @@ class handler(BaseHTTPRequestHandler):
         music_preferences = data['music_preferences']
         duration = int(data['duration'])
         
-        # Generate mock playlist based on preferences
-        mock_playlist = self._generate_mock_playlist(class_name, music_preferences, duration)
-        
-        response = {
-            "success": True,
-            "playlist": mock_playlist,
-            "spotify_integration": {
-                "search_results": {
-                    "found_count": 8,
-                    "total_tracks": 8
+        try:
+            # Try to use real LangChain agent
+            playlist = self._generate_real_playlist(class_name, music_preferences, duration)
+            
+            response = {
+                "success": True,
+                "playlist": playlist,
+                "spotify_integration": {
+                    "search_results": {
+                        "found_count": 8,  # Will be real when we add Spotify
+                        "total_tracks": 8
+                    },
+                    "track_ids": ["track_1", "track_2", "track_3", "track_4", "track_5", "track_6", "track_7", "track_8"]
                 },
-                "track_ids": ["mock_id_1", "mock_id_2", "mock_id_3", "mock_id_4", "mock_id_5", "mock_id_6", "mock_id_7", "mock_id_8"]
-            },
-            "ready_for_export": True
-        }
+                "ready_for_export": True,
+                "source": "langchain_agent"
+            }
+            
+        except Exception as e:
+            # Fallback to mock if LangChain fails
+            playlist = self._generate_mock_playlist(class_name, music_preferences, duration)
+            
+            response = {
+                "success": True,
+                "playlist": playlist,
+                "spotify_integration": {
+                    "search_results": {
+                        "found_count": 8,
+                        "total_tracks": 8
+                    },
+                    "track_ids": ["mock_id_1", "mock_id_2", "mock_id_3", "mock_id_4", "mock_id_5", "mock_id_6", "mock_id_7", "mock_id_8"]
+                },
+                "ready_for_export": True,
+                "source": f"fallback_due_to: {str(e)}"
+            }
         
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
@@ -48,16 +74,74 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(response).encode())
         return
 
-    def do_OPTIONS(self):
-        # Handle CORS preflight requests
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
+    def _generate_real_playlist(self, class_name, music_preferences, duration):
+        """Generate playlist using real LangChain agent"""
+        
+        # Import LangChain components
+        from langchain_openai import ChatOpenAI
+        from langchain.prompts import ChatPromptTemplate
+        
+        # Initialize LLM
+        llm = ChatOpenAI(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            model="gpt-3.5-turbo",
+            temperature=0.7
+        )
+        
+        # Create prompt
+        prompt = ChatPromptTemplate.from_template("""
+        You are a music curation expert for yoga classes. Create a structured playlist for this yoga class.
+        
+        Class: {class_name}
+        Duration: {duration} minutes
+        Music Preferences: {music_preferences}
+        
+        IMPORTANT: Your response should ONLY contain the structured playlist format below. 
+        Do not include any explanatory text, introductions, or commentary.
+        
+        Always use this exact format:
+        
+        **WARMUP (X minutes)**
+        BPM: XX-XX | Energy: Description
+        - Artist - Song Title
+        - Artist - Song Title
+        
+        **FLOW/ACTIVE (X minutes)**
+        BPM: XX-XX | Energy: Description  
+        - Artist - Song Title
+        - Artist - Song Title
+        
+        **PEAK (X minutes)**
+        BPM: XX-XX | Energy: Description
+        - Artist - Song Title
+        - Artist - Song Title
+        
+        **COOLDOWN/SAVASANA (X minutes)**
+        BPM: XX-XX | Energy: Description
+        - Artist - Song Title
+        - Artist - Song Title
+        
+        Key principles:
+        - Warmup: 60-80 BPM, gentle, welcoming
+        - Flow: 80-110 BPM, rhythmic, supportive
+        - Peak: 90-120 BPM, energizing, focused
+        - Cooldown: 50-70 BPM, peaceful, integrative
+        
+        Match the teacher's music preferences and class style when selecting tracks.
+        """)
+        
+        # Generate playlist
+        chain = prompt | llm
+        result = chain.invoke({
+            "class_name": class_name,
+            "duration": duration,
+            "music_preferences": music_preferences
+        })
+        
+        return result.content.strip()
 
     def _generate_mock_playlist(self, class_name, music_preferences, duration):
-        """Generate a mock playlist based on input parameters"""
+        """Fallback mock playlist generation"""
         
         # Calculate phase durations
         warmup_duration = int(duration * 0.15)
@@ -128,6 +212,14 @@ BPM: 60-75 | Energy: Peaceful, meditative"""
             playlist += f"\n- {track}"
             
         return playlist
+
+    def do_OPTIONS(self):
+        # Handle CORS preflight requests
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
 
     def _send_error(self, message, status_code):
         """Helper to send error responses"""
