@@ -26,9 +26,13 @@ class handler(BaseHTTPRequestHandler):
 
         class_name = data['class_name']
         class_description = data.get('class_description', '')
-        music_preferences = data['music_preferences', 'any style appropriate for yoga']
+        music_preferences = data.get('music_preferences', '')
         duration = int(data['duration'])
         
+        # Handle empty music preferences
+        if not music_preferences.strip():
+            music_preferences = "music appropriate for yoga"
+            
         try:
             # Handle empty music preferences
             if not music_preferences.strip():
