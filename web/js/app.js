@@ -67,8 +67,6 @@ function setupEventListeners() {
 function handleClassTypeChange() {
     if (classTypeSelect.value === '__ADD_NEW__') {
         showAddNewClassInterface();
-    } else {
-        hideAddNewClassInterface();
     }
 }
 
@@ -95,9 +93,24 @@ function showAddNewClassInterface() {
 }
 
 function hideAddNewClassInterface() {
-    // This function will restore the original select dropdown
-    // Called when canceling or after successful save
-    location.reload(); // Simple approach - reload to restore original state
+    // Instead of reloading the page, restore the form properly
+    const formGroup = document.querySelector('.form-group');
+    
+    formGroup.innerHTML = `
+        <label for="class-type">Yoga Class Type</label>
+        <select id="class-type" required>
+            <option value="">Loading classes...</option>
+        </select>
+    `;
+    
+    // Re-assign the global reference
+    window.classTypeSelect = document.getElementById('class-type');
+    
+    // Re-add event listener
+    classTypeSelect.addEventListener('change', handleClassTypeChange);
+    
+    // Reload the classes
+    loadYogaClasses();
 }
 
 async function saveNewClass() {
