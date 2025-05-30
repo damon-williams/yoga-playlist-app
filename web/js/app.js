@@ -562,7 +562,7 @@ async function initiateSpotifyAuth(playlistName, trackIds) {
                 <strong>🎵 Spotify Authorization Required</strong><br>
                 Click the button below to authorize with Spotify, then return to create your playlist.
                 <br><br>
-                <a href="${data.auth_url}" target="_blank" class="spotify-auth-btn">
+                <a href="${data.auth_url}" class="spotify-auth-btn">
                     Authorize with Spotify
                 </a>
                 <br><br>
