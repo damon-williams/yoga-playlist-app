@@ -333,6 +333,7 @@ async function handlePlaylistGeneration(event) {
     
     // Show loading state
     setGeneratingState(true);
+    showLoadingAnimation(); 
     const startTime = Date.now();
 
     try {
@@ -367,6 +368,9 @@ async function handlePlaylistGeneration(event) {
             if (data.ready_for_export) {
                 showExportSection(formData.class_name);
             }
+              // Show share section
+            showShareSection(); 
+            
         } else {
             // Track generation failure
             posthog.capture('playlist_generation_error', {
@@ -611,6 +615,60 @@ async function initiateSpotifyAuth(playlistName, trackIds) {
         currentExportBtn.textContent = 'Create Spotify Playlist';
     }
 }
+
+// Show loading animation in output panel
+function showLoadingAnimation() {
+    outputContent.innerHTML = `
+        <div class="loading-animation">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">🎵 Generating your playlist...</div>
+            <div class="loading-subtext">Finding the perfect tracks on Spotify</div>
+        </div>
+    `;
+}
+
+// Show share section
+function showShareSection() {
+    const shareSection = document.getElementById('share-section');
+    if (shareSection) {
+        shareSection.style.display = 'block';
+        
+        // Add event listeners for share buttons
+        document.getElementById('copy-link-btn').addEventListener('click', copyAppLink);
+        document.getElementById('share-twitter-btn').addEventListener('click', shareOnTwitter);
+        document.getElementById('share-linkedin-btn').addEventListener('click', shareOnLinkedIn);
+    }
+}
+
+// Share functions
+function copyAppLink() {
+    const url = window.location.origin;
+    navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copy-link-btn');
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        btn.style.background = '#4CAF50';
+        
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+        }, 2000);
+    });
+}
+
+function shareOnTwitter() {
+    const text = "Check out this amazing AI-powered yoga playlist generator! 🧘‍♀️🎵 Creates personalized Spotify playlists for yoga classes.";
+    const url = window.location.origin;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    window.open(twitterUrl, '_blank');
+}
+
+function shareOnLinkedIn() {
+    const url = window.location.origin;
+    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+    window.open(linkedinUrl, '_blank');
+}
+
 
 // Add this function to show success messages
 function showSuccessMessage(message, isError = false) {
