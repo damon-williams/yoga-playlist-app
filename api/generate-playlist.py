@@ -34,17 +34,14 @@ class handler(BaseHTTPRequestHandler):
             # Try to use real LangChain agent
             playlist = self._generate_real_playlist(class_name, music_preferences, duration)
             
+            # Search for real tracks on Spotify
+            spotify_result = self._search_spotify_tracks(playlist)
+            
             response = {
                 "success": True,
                 "playlist": playlist,
-                "spotify_integration": {
-                    "search_results": {
-                        "found_count": 8,  # Will be real when we add Spotify
-                        "total_tracks": 8
-                    },
-                    "track_ids": ["track_1", "track_2", "track_3", "track_4", "track_5", "track_6", "track_7", "track_8"]
-                },
-                "ready_for_export": True,
+                "spotify_integration": spotify_result,
+                "ready_for_export": spotify_result.get("ready_for_spotify", False),
                 "source": "langchain_agent"
             }
             
@@ -211,7 +208,107 @@ BPM: 60-75 | Energy: Peaceful, meditative"""
         for track in tracks["cooldown"]:
             playlist += f"\n- {track}"
             
-        return playlist
+            def _search_spotify_tracks(self, playlist_text):
+        """Search for tracks on Spotify"""
+        try:
+            import spotipy
+            from spotipy.oauth2 import SpotifyClientCredentials
+            
+            # Get Spotify client
+            client_id = os.getenv("SPOTIFY_CLIENT_ID")
+            client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+            
+            if not client_id or not client_secret:
+                return {
+                    "found_count": 0,
+                    "total_tracks": 0,
+                    "ready_for_spotify": False,
+                    "error": "Spotify credentials not configured"
+                }
+            
+            client_credentials_manager = SpotifyClientCredentials(
+                client_id=client_id,
+                client_secret=client_secret
+            )
+            
+            sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+            
+            # Extract tracks from playlist text
+            tracks = self._extract_tracks_from_text(playlist_text)
+            
+            if not tracks:
+                return {
+                    "found_count": 0,
+                    "total_tracks": 0,
+                    "ready_for_spotify": False,
+                    "error": "No tracks found in playlist"
+                }
+            
+            # Search for each track
+            found_tracks = []
+            failed_tracks = []
+            
+            for track_query in tracks:
+                try:
+                    search_results = sp.search(q=track_query, type='track', limit=1)
+                    tracks_found = search_results['tracks']['items']
+                    
+                    if tracks_found:
+                        track = tracks_found[0]
+                        found_tracks.append({
+                            'original_query': track_query,
+                            'spotify_data': {
+                                'spotify_id': track['id'],
+                                'name': track['name'],
+                                'artists': [artist['name'] for artist in track['artists']],
+                                'duration_ms': track['duration_ms'],
+                                'preview_url': track['preview_url']
+                            }
+                        })
+                    else:
+                        failed_tracks.append({
+                            'original_query': track_query,
+                            'error': 'Track not found'
+                        })
+                        
+                except Exception as e:
+                    failed_tracks.append({
+                        'original_query': track_query,
+                        'error': str(e)
+                    })
+            
+            return {
+                "search_results": {
+                    "found_count": len(found_tracks),
+                    "total_tracks": len(tracks),
+                    "successful_tracks": found_tracks,
+                    "failed_tracks": failed_tracks
+                },
+                "track_ids": [track["spotify_data"]["spotify_id"] for track in found_tracks],
+                "ready_for_spotify": len(found_tracks) > 0
+            }
+            
+        except Exception as e:
+            return {
+                "found_count": 0,
+                "total_tracks": 0,
+                "ready_for_spotify": False,
+                "error": f"Spotify search failed: {str(e)}"
+            }
+
+    def _extract_tracks_from_text(self, playlist_text):
+        """Extract track listings from playlist text"""
+        tracks = []
+        lines = playlist_text.split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            # Look for lines with track format: "- Artist - Song"
+            if line.startswith('-') and ' - ' in line[1:]:
+                track = line[1:].strip()  # Remove the dash
+                tracks.append(track)
+        
+        return tracks
 
     def do_OPTIONS(self):
         # Handle CORS preflight requests
