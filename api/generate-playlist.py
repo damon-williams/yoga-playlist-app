@@ -1,6 +1,9 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+import re
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -26,21 +29,18 @@ class handler(BaseHTTPRequestHandler):
         duration = int(data['duration'])
         
         try:
-            # Try to use real LangChain agent
+            # Generate playlist with real LangChain agent
             playlist = self._generate_real_playlist(class_name, music_preferences, duration)
+            
+            # Search for real Spotify tracks
+            spotify_results = self._search_spotify_tracks(playlist)
             
             response = {
                 "success": True,
                 "playlist": playlist,
-                "spotify_integration": {
-                    "search_results": {
-                        "found_count": 8,
-                        "total_tracks": 8
-                    },
-                    "track_ids": ["temp_1", "temp_2", "temp_3", "temp_4"]
-                },
-                "ready_for_export": True,
-                "source": "langchain_agent"
+                "spotify_integration": spotify_results,
+                "ready_for_export": len(spotify_results.get("track_ids", [])) > 0,
+                "source": "langchain_agent_with_spotify"
             }
             
         except Exception as e:
@@ -52,12 +52,13 @@ class handler(BaseHTTPRequestHandler):
                 "playlist": playlist,
                 "spotify_integration": {
                     "search_results": {
-                        "found_count": 8,
-                        "total_tracks": 8
+                        "found_count": 0,
+                        "total_tracks": 0,
+                        "error": str(e)
                     },
-                    "track_ids": ["mock_id_1", "mock_id_2", "mock_id_3", "mock_id_4"]
+                    "track_ids": []
                 },
-                "ready_for_export": True,
+                "ready_for_export": False,
                 "source": f"fallback_due_to: {str(e)}"
             }
         
@@ -113,6 +114,105 @@ class handler(BaseHTTPRequestHandler):
         })
         
         return result.content.strip()
+
+    def _search_spotify_tracks(self, playlist_text):
+        """Search Spotify for tracks mentioned in the playlist"""
+        try:
+            # Setup Spotify client
+            client_id = os.getenv("SPOTIFY_CLIENT_ID")
+            client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+            
+            if not client_id or not client_secret:
+                return {
+                    "search_results": {
+                        "found_count": 0,
+                        "total_tracks": 0,
+                        "error": "Spotify credentials not configured"
+                    },
+                    "track_ids": []
+                }
+            
+            client_credentials_manager = SpotifyClientCredentials(
+                client_id=client_id,
+                client_secret=client_secret
+            )
+            sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+            
+            # Extract tracks from playlist text
+            tracks = self._extract_tracks_from_text(playlist_text)
+            
+            if not tracks:
+                return {
+                    "search_results": {
+                        "found_count": 0,
+                        "total_tracks": 0,
+                        "error": "No tracks found in playlist text"
+                    },
+                    "track_ids": []
+                }
+            
+            # Search for each track
+            found_tracks = []
+            track_ids = []
+            
+            for track_query in tracks:
+                try:
+                    # Search Spotify
+                    results = sp.search(q=track_query, type='track', limit=1)
+                    
+                    if results['tracks']['items']:
+                        track = results['tracks']['items'][0]
+                        found_tracks.append({
+                            'original_query': track_query,
+                            'spotify_data': {
+                                'spotify_id': track['id'],
+                                'name': track['name'],
+                                'artists': [artist['name'] for artist in track['artists']],
+                                'uri': track['uri']
+                            }
+                        })
+                        track_ids.append(track['id'])
+                    
+                except Exception as search_error:
+                    print(f"Error searching for track '{track_query}': {search_error}")
+                    continue
+            
+            return {
+                "search_results": {
+                    "found_count": len(found_tracks),
+                    "total_tracks": len(tracks),
+                    "successful_tracks": found_tracks
+                },
+                "track_ids": track_ids
+            }
+            
+        except Exception as e:
+            return {
+                "search_results": {
+                    "found_count": 0,
+                    "total_tracks": 0,
+                    "error": f"Spotify search failed: {str(e)}"
+                },
+                "track_ids": []
+            }
+
+    def _extract_tracks_from_text(self, playlist_text):
+        """Extract track names from playlist text (same logic as your MusicIntegrationAgent)"""
+        tracks = []
+        lines = playlist_text.split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            # Look for lines that start with • OR - and contain track info
+            if (line.startswith('•') or line.startswith('-')) and ' - ' in line:
+                # Remove the bullet point or dash and clean up
+                if line.startswith('•'):
+                    track_info = line[1:].strip()
+                elif line.startswith('-'):
+                    track_info = line[1:].strip()
+                tracks.append(track_info)
+        
+        return tracks
 
     def _generate_mock_playlist(self, class_name, music_preferences, duration):
         """Fallback mock playlist"""
