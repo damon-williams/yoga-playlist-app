@@ -25,12 +25,13 @@ class handler(BaseHTTPRequestHandler):
                 return
 
         class_name = data['class_name']
+        class_description = data.get('class_description', '')
         music_preferences = data['music_preferences']
         duration = int(data['duration'])
         
         try:
             # Generate playlist with real LangChain agent
-            playlist = self._generate_real_playlist(class_name, music_preferences, duration)
+            playlist = self._generate_real_playlist(class_name, class_description, music_preferences, duration)
             
             # Search for real Spotify tracks
             spotify_results = self._search_spotify_tracks(playlist)
@@ -70,7 +71,7 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(response).encode())
         return
 
-    def _generate_real_playlist(self, class_name, music_preferences, duration):
+    def _generate_real_playlist(self, class_name, class_description, music_preferences, duration):
         """Generate playlist using real LangChain agent"""
         from langchain_openai import ChatOpenAI
         from langchain_core.prompts import ChatPromptTemplate
@@ -78,13 +79,14 @@ class handler(BaseHTTPRequestHandler):
         llm = ChatOpenAI(
             api_key=os.getenv("OPENAI_API_KEY"),
             model="gpt-3.5-turbo",
-            temperature=0.7
+            temperature=0.9
         )
         
         prompt = ChatPromptTemplate.from_template("""
-        Create a structured playlist for this yoga class.
+        Create a structured playlist for this yoga class that matches the following criteria:
         
-        Class: {class_name}
+        Class Name: {class_name}
+        Class Description: {class_description}
         Duration: {duration} minutes
         Music Preferences: {music_preferences}
         
@@ -97,10 +99,6 @@ class handler(BaseHTTPRequestHandler):
         BPM: XX-XX | Energy: Description  
         - Artist - Song Title
         
-        **PEAK (X minutes)**
-        BPM: XX-XX | Energy: Description
-        - Artist - Song Title
-        
         **COOLDOWN/SAVASANA (X minutes)**
         BPM: XX-XX | Energy: Description
         - Artist - Song Title
@@ -109,6 +107,7 @@ class handler(BaseHTTPRequestHandler):
         chain = prompt | llm
         result = chain.invoke({
             "class_name": class_name,
+            "class_description": class_description,
             "duration": duration,
             "music_preferences": music_preferences
         })

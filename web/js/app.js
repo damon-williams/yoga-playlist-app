@@ -283,10 +283,11 @@ function populateClassSelect(classes) {
     classes.forEach(yogaClass => {
         const option = document.createElement('option');
         option.value = yogaClass.name;
-        option.textContent = `${yogaClass.name} - ${yogaClass.description}`;
+        option.textContent = yogaClass.name;  // ← Only show name
+        option.setAttribute('data-description', yogaClass.description);  // ← Store description
         classTypeSelect.appendChild(option);
     });
-
+    
     // Add "Add New Class" option
     const addNewOption = document.createElement('option');
     addNewOption.value = '__ADD_NEW__';
@@ -297,12 +298,17 @@ function populateClassSelect(classes) {
 async function handlePlaylistGeneration(event) {
     event.preventDefault();
     
+    // Get the selected option element to access the description
+    const selectedOption = classTypeSelect.options[classTypeSelect.selectedIndex];
+    const classDescription = selectedOption.getAttribute('data-description') || '';
+
     const formData = {
         class_name: classTypeSelect.value,
+        class_description: classDescription,  // ← Add this
         music_preferences: musicPreferences.value,
         duration: parseInt(durationSlider.value)
     };
-    
+
     // Validate form
     if (!formData.class_name || !formData.music_preferences) {
         // Track validation error
