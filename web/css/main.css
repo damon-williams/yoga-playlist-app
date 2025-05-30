@@ -370,6 +370,76 @@ input[type="range"]::-moz-range-thumb {
     border: 1px solid #f5c6cb;
 }
 
+/* Add these styles to your web/css/main.css */
+
+/* Spotify OAuth Elements */
+.spotify-auth-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #1DB954;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 16px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin: 10px 5px;
+}
+
+.spotify-auth-btn:hover {
+    background: #1ed760;
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: white;
+}
+
+.check-return-btn {
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 10px 5px;
+}
+
+.check-return-btn:hover {
+    background: #5a6fd8;
+}
+
+/* Export result info state */
+#export-result.info {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #bbdefb;
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+#export-result.info a {
+    color: #1565c0;
+    text-decoration: underline;
+}
+
+#export-result.info a:hover {
+    text-decoration: none;
+}
+
+/* Enhanced success message with links */
+#export-result.success a {
+    color: #155724;
+    font-weight: 600;
+    text-decoration: underline;
+    margin-left: 10px;
+}
+
+#export-result.success a:hover {
+    text-decoration: none;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .main-content {
