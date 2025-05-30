@@ -570,12 +570,17 @@ async function handleSpotifyExport() {
 
 async function initiateSpotifyAuth(playlistName, trackIds) {
     const currentExportBtn = document.getElementById('export-btn');
-    const currentExportResult = document.getElementById('export-result');
     
     try {
         // Show loading state
         currentExportBtn.disabled = true;
         currentExportBtn.textContent = '🔄 Getting Spotify Authorization...';
+        
+        // Store playlist data in localStorage for when user returns
+        localStorage.setItem('pendingPlaylist', JSON.stringify({
+            playlistName: playlistName,
+            trackIds: trackIds
+        }));
         
         // Get Spotify authorization URL
         const response = await fetch(`${API_BASE_URL}/create-spotify-playlist`, {
@@ -591,31 +596,17 @@ async function initiateSpotifyAuth(playlistName, trackIds) {
         const data = await response.json();
         
         if (data.success && data.auth_url) {
-            // Store playlist data in localStorage for when user returns
-            localStorage.setItem('pendingPlaylist', JSON.stringify({
-                playlistName: playlistName,
-                trackIds: trackIds
-            }));
-            
-            // Show user instructions
-            currentExportResult.className = 'info';
-            currentExportResult.innerHTML = `
-                <strong>🎵 Spotify Authorization Required</strong><br>
-                Click the button below to authorize with Spotify.
-                <br><br>
-                <a href="${data.auth_url}" class="spotify-auth-btn">
-                    Authorize with Spotify
-                </a>
-            `;
-            
+            // Directly redirect to Spotify (no second button)
+            window.location.href = data.auth_url;
         } else {
             displayExportError(data.error || 'Failed to get Spotify authorization URL');
+            currentExportBtn.disabled = false;
+            currentExportBtn.textContent = 'Create Spotify Playlist';
         }
         
     } catch (error) {
         console.error('Error getting Spotify auth:', error);
         displayExportError('Network error - please try again');
-    } finally {
         currentExportBtn.disabled = false;
         currentExportBtn.textContent = 'Create Spotify Playlist';
     }
