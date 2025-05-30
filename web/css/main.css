@@ -404,13 +404,30 @@ input[type="range"]::-moz-range-thumb {
     font-size: 0.9em;
 }
 
+textarea::placeholder {
+    font-size: 0.9em;
+    color: #999;
+}
+
+/* Vendor prefixes for better compatibility */
+textarea::-webkit-input-placeholder {
+    font-size: 0.9em;
+}
+
+textarea::-moz-placeholder {
+    font-size: 0.9em;
+}
+
+textarea:-ms-input-placeholder {
+    font-size: 0.9em;
+}
 
 /* Style the playlist sections */
 .playlist-content strong {
     display: block;
     font-size: 1.1em;
     font-weight: 600;
-    margin: 20px 0 10px 0;
+    margin: 10px 0 10px 0;
     color: #555;
 }
 

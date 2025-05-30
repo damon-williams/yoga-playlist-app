@@ -370,7 +370,7 @@ async function handlePlaylistGeneration(event) {
             }
               // Show share section
             showShareSection(); 
-            
+
         } else {
             // Track generation failure
             posthog.capture('playlist_generation_error', {
@@ -461,7 +461,7 @@ function displayPlaylistResult(data) {
     
     const resultHtml = `
         <div class="playlist-result">
-            <h3>🎵 Generated Playlist</h3>
+            <h3>🎵 Your Personalized Playlist</h3>
             <div class="playlist-content">
                 ${formattedPlaylist}
             </div>
