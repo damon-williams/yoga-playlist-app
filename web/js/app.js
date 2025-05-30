@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // User has returned from Spotify - auto-create the playlist
         setTimeout(() => {
             const playlistData = JSON.parse(pendingPlaylist);
-            createPlaylistWithAuthCode(playlistData.playlistName, playlistData.trackIds, authCode);
+            createPlaylistWithAuthCodeForReturn(playlistData.playlistName, playlistData.trackIds, authCode);
         }, 1000); // Small delay to ensure page is fully loaded
     }
 });
@@ -401,6 +401,37 @@ function setGeneratingState(isGenerating) {
     }
 }
 
+async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode) {
+    try {
+        showSuccessMessage('🔄 Creating your Spotify playlist...');
+        
+        const response = await fetch(`${API_BASE_URL}/create-spotify-playlist`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'create_playlist',
+                playlist_name: playlistName,
+                track_ids: trackIds,
+                auth_code: authCode
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccessMessage(`🎉 Success! Created playlist "${playlistName}" with ${data.tracks_added} tracks. <a href="${data.playlist_url}" target="_blank">Open in Spotify</a>`);
+            localStorage.removeItem('pendingPlaylist');
+        } else {
+            showSuccessMessage(`❌ Error: ${data.error}`, true);
+        }
+        
+    } catch (error) {
+        showSuccessMessage(`❌ Network error: ${error.message}`, true);
+    }
+}
+
 function displayPlaylistResult(data) {
     // Debug log to see what we're getting
     console.log('Playlist data received:', data);
@@ -581,6 +612,23 @@ async function initiateSpotifyAuth(playlistName, trackIds) {
     } finally {
         currentExportBtn.disabled = false;
         currentExportBtn.textContent = 'Create Spotify Playlist';
+    }
+}
+
+// Add this function to show success messages
+function showSuccessMessage(message, isError = false) {
+    const successArea = document.getElementById('success-area');
+    const successContent = document.getElementById('success-content');
+    
+    successContent.innerHTML = message;
+    successArea.className = isError ? 'success-area error' : 'success-area';
+    successArea.style.display = 'block';
+    
+    // Auto-hide after 10 seconds unless it contains a link
+    if (!message.includes('<a ')) {
+        setTimeout(() => {
+            successArea.style.display = 'none';
+        }, 10000);
     }
 }
 

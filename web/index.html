@@ -14,18 +14,12 @@
     <div class="container">
         <header class="header">
             <h1>🧘‍♀️ Yoga Playlist Generator</h1>
-            <p>Create personalized playlists for your yoga classes using AI agents</p>
+            <p>Create personalized playlists for your yoga classes</p>
         </header>
 
-        <div class="status-bar">
-            <div class="status-item">
-                <span class="status-label">Backend:</span>
-                <span id="backend-status" class="status-value">Checking...</span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">Spotify:</span>
-                <span id="spotify-status" class="status-value">Checking...</span>
-            </div>
+        <!-- Success/Status Message Area (replaces status bar) -->
+        <div id="success-area" class="success-area" style="display: none;">
+            <div id="success-content"></div>
         </div>
 
         <div class="main-content">
@@ -84,6 +78,18 @@
                     <button id="export-btn" class="export-btn">Create Spotify Playlist</button>
                 </div>
                 <div id="export-result"></div>
+            </div>
+        </div>
+
+        <!-- Status Bar moved to bottom -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">Backend:</span>
+                <span id="backend-status" class="status-value">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Spotify:</span>
+                <span id="spotify-status" class="status-value">Checking...</span>
             </div>
         </div>
     </div>
