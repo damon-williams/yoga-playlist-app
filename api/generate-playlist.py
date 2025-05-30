@@ -72,7 +72,7 @@ class handler(BaseHTTPRequestHandler):
     def _generate_real_playlist(self, class_name, music_preferences, duration):
         """Generate playlist using real LangChain agent"""
         from langchain_openai import ChatOpenAI
-        from langchai_core.prompts import ChatPromptTemplate
+        from langchain_core.prompts import ChatPromptTemplate
         
         llm = ChatOpenAI(
             api_key=os.getenv("OPENAI_API_KEY"),
