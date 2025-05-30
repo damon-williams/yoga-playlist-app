@@ -286,10 +286,43 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .playlist-result {
-    white-space: pre-wrap;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
     line-height: 1.6;
+    color: #333;
+}
+
+.playlist-result h3 {
+    font-size: 1.3em;
+    margin-bottom: 20px;
+    color: #333;
+    font-weight: 600;
+}
+
+.playlist-content {
+    white-space: pre-line;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+/* Style the playlist sections */
+.playlist-content strong {
+    display: block;
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 20px 0 10px 0;
+    color: #555;
+}
+
+/* Style the track lists */
+.playlist-content {
+    counter-reset: track-counter;
+}
+
+/* Remove the monospace font that's currently being applied */
+.playlist-result * {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
 }
 
 /* Export Section */

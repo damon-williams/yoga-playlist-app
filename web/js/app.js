@@ -450,11 +450,17 @@ function displayPlaylistResult(data) {
         spotifyInfo = `${found}/${total} tracks found`;
     }
     
+    // Clean up the playlist text formatting
+    const formattedPlaylist = data.playlist
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Convert **text** to <strong>
+        .replace(/BPM:/g, '<em>BPM:</em>')  // Style BPM info
+        .replace(/Energy:/g, '<em>Energy:</em>');  // Style Energy info
+    
     const resultHtml = `
         <div class="playlist-result">
             <h3>🎵 Generated Playlist</h3>
             <div class="playlist-content">
-                ${data.playlist}
+                ${formattedPlaylist}
             </div>
         </div>
     `;
