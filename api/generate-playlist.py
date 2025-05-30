@@ -30,7 +30,11 @@ class handler(BaseHTTPRequestHandler):
         duration = int(data['duration'])
         
         try:
-            # Generate playlist with real LangChain agent
+            # Handle empty music preferences
+            if not music_preferences.strip():
+                music_preferences = "music appropriate for yoga"
+
+            # Generate playlist
             playlist = self._generate_real_playlist(class_name, class_description, music_preferences, duration)
             
             # Search for real Spotify tracks
@@ -46,6 +50,10 @@ class handler(BaseHTTPRequestHandler):
             
         except Exception as e:
             # Fallback to mock
+            # Handle empty music preferences
+            if not music_preferences.strip():
+                music_preferences = "music appropriate for yoga"
+
             playlist = self._generate_mock_playlist(class_name, music_preferences, duration)
             
             response = {
