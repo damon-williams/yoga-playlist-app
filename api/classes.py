@@ -1,29 +1,58 @@
 from http.server import BaseHTTPRequestHandler
 import json
+import os
+from supabase import create_client
 
 class handler(BaseHTTPRequestHandler):
+    def _get_supabase_client(self):
+        """Get Supabase client"""
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+        return create_client(supabase_url, supabase_key)
+
     def do_GET(self):
-        # Return hardcoded classes for now
-        classes = [
-            {
-                "name": "Traditional Hatha",
-                "description": "Classic yoga with poses held for several breaths, focusing on alignment and breathing"
-            },
-            {
-                "name": "Vinyasa Flow", 
-                "description": "Dynamic flow linking breath with movement"
-            },
-            {
-                "name": "Yoga Sculpt",
-                "description": "Fitness-integrated yoga with strength training elements using weights"
+        try:
+            # Get real data from Supabase
+            supabase = self._get_supabase_client()
+            result = supabase.table("yoga_class_types").select("name, description").execute()
+            
+            classes = []
+            if result.data:
+                for row in result.data:
+                    classes.append({
+                        "name": row["name"],
+                        "description": row["description"]
+                    })
+            
+            response = {
+                "success": True,
+                "classes": classes,
+                "total": len(classes)
             }
-        ]
-        
-        response = {
-            "success": True,
-            "classes": classes,
-            "total": len(classes)
-        }
+            
+        except Exception as e:
+            # Fallback to hardcoded classes if Supabase fails
+            classes = [
+                {
+                    "name": "Traditional Hatha",
+                    "description": "Classic yoga with poses held for several breaths, focusing on alignment and breathing"
+                },
+                {
+                    "name": "Vinyasa Flow", 
+                    "description": "Dynamic flow linking breath with movement"
+                },
+                {
+                    "name": "Yoga Sculpt",
+                    "description": "Fitness-integrated yoga with strength training elements using weights"
+                }
+            ]
+            
+            response = {
+                "success": True,
+                "classes": classes,
+                "total": len(classes),
+                "note": f"Using fallback data due to: {str(e)}"
+            }
         
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
@@ -48,16 +77,33 @@ class handler(BaseHTTPRequestHandler):
         if not data.get('name') or not data.get('description'):
             self._send_error("Missing required fields: name and description", 400)
             return
+        
+        try:
+            # Add to real Supabase database
+            supabase = self._get_supabase_client()
             
-        # Mock success response
-        response = {
-            "success": True,
-            "message": f"✅ Added class type: {data['name']}",
-            "class": {
+            insert_data = {
                 "name": data['name'],
-                "description": data['description']
+                "description": data['description'],
+                "typical_duration": data.get('duration'),
+                "energy_level": data.get('energy_level'),
+                "music_style_notes": data.get('music_style_notes')
             }
-        }
+            
+            result = supabase.table("yoga_class_types").insert(insert_data).execute()
+            
+            response = {
+                "success": True,
+                "message": f"✅ Added class type: {data['name']}",
+                "class": {
+                    "name": data['name'],
+                    "description": data['description']
+                }
+            }
+            
+        except Exception as e:
+            self._send_error(f"Database error: {str(e)}", 500)
+            return
         
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
