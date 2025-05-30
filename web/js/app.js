@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check if user is returning from Spotify authorization
     const authCode = getSpotifyAuthCodeFromURL();
-    const pendingPlaylist = sessionStorage.getItem('pendingPlaylist');
+    const pendingPlaylist = localStorage.getItem('pendingPlaylist');
     
     if (authCode && pendingPlaylist) {
         // User has returned from Spotify - auto-create the playlist
@@ -550,8 +550,8 @@ async function initiateSpotifyAuth(playlistName, trackIds) {
         const data = await response.json();
         
         if (data.success && data.auth_url) {
-            // Store playlist data in sessionStorage for when user returns
-            sessionStorage.setItem('pendingPlaylist', JSON.stringify({
+            // Store playlist data in localStorage for when user returns
+            localStorage.setItem('pendingPlaylist', JSON.stringify({
                 playlistName: playlistName,
                 trackIds: trackIds
             }));
@@ -617,7 +617,7 @@ async function createPlaylistWithAuthCode(playlistName, trackIds, authCode) {
             `;
             
             // Clear stored playlist data
-            sessionStorage.removeItem('pendingPlaylist');
+            localStorage.removeItem('pendingPlaylist');
             
         } else if (data.needs_auth) {
             // Still needs authorization
@@ -652,7 +652,7 @@ function getSpotifyAuthCodeFromURL() {
 function checkForSpotifyReturn() {
     // Check if user has returned from Spotify authorization
     const authCode = getSpotifyAuthCodeFromURL();
-    const pendingPlaylist = sessionStorage.getItem('pendingPlaylist');
+    const pendingPlaylist = localStorage.getItem('pendingPlaylist');
     
     if (authCode && pendingPlaylist) {
         const playlistData = JSON.parse(pendingPlaylist);
