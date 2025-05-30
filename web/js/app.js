@@ -1,3 +1,10 @@
+// Disable PostHog temporarily
+window.posthog = {
+    capture: function() {
+        console.log('PostHog disabled - would have tracked:', arguments);
+    }
+};
+
 // Configuration
 const API_BASE_URL = '/api';
 
