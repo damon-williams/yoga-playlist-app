@@ -64,9 +64,10 @@
                         <span class="btn-text">Generate Playlist</span>
                         <span class="btn-loading">🔄 Generating...</span>
                     </button>
-                    <!-- fairydust payment button -->
-                    <div id="fairydust-generate-button"></div>
                 </form>
+                
+                <!-- fairydust payment button outside form to prevent form submission -->
+                <div id="fairydust-generate-button"></div>
             </div>
 
             <div class="output-panel">
@@ -153,10 +154,13 @@
                 onSuccess: async (transaction) => {
                     console.log('fairydust payment successful:', transaction);
                     
-                    // Trigger the original generate function
-                    const originalBtn = document.getElementById('generate-btn');
-                    if (originalBtn) {
-                        originalBtn.click();
+                    // Call the playlist generation function directly
+                    if (typeof handlePlaylistGeneration === 'function') {
+                        // Create a fake event object to pass to the function
+                        const fakeEvent = { preventDefault: () => {} };
+                        await handlePlaylistGeneration(fakeEvent);
+                    } else {
+                        console.error('handlePlaylistGeneration function not found');
                     }
                 },
                 onError: (error) => {
@@ -172,6 +176,21 @@
             
             document.getElementById('duration').addEventListener('input', updateFairydustButton);
             document.getElementById('class-type').addEventListener('change', updateFairydustButton);
+            
+            // Override the original form submission handler to prevent conflicts
+            const originalForm = document.getElementById('playlist-form');
+            if (originalForm) {
+                // Remove existing event listeners by cloning the form
+                const newForm = originalForm.cloneNode(true);
+                originalForm.parentNode.replaceChild(newForm, originalForm);
+                
+                // Add our own handler that prevents submission
+                newForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    console.log('Form submission prevented - use fairydust button for payment');
+                    return false;
+                });
+            }
         });
     </script>
 
