@@ -8,6 +8,9 @@
     <base href="https://yoga-playlist-app.vercel.app/">
       <!-- Load CSS with absolute path -->
     <link rel="stylesheet" href="https://yoga-playlist-app.vercel.app/css/main.css">
+    <!-- fairydust SDK -->
+    <script src="https://fairydust.fun/sdk/index.umd.js"></script>
+    <link rel="stylesheet" href="https://fairydust.fun/sdk/fairydust.css">
     <script>
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);var n=t;if("undefined"!=typeof e)try{n=t[e]}catch(r){}return n}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
     posthog.init('phc_wANN8fAdn8bek8ZzbcZpZGOzRp6TfOfVPvW7CKq3B6m',{api_host:'https://app.posthog.com'})
@@ -15,9 +18,12 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>🧘‍♀️ Yoga Playlist Generator</h1>
-            <p>Creates a personalized playlist and connects to Spotify</p>
+        <header class="header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>🧘‍♀️ Yoga Playlist Generator</h1>
+                <p>Creates a personalized playlist and connects to Spotify</p>
+            </div>
+            <div id="fairydust-account"></div>
         </header>
 
         <!-- Success/Status Message Area (replaces status bar) -->
@@ -54,10 +60,12 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="generate-btn" class="generate-btn">
+                    <button type="submit" id="generate-btn" class="generate-btn" style="display: none;">
                         <span class="btn-text">Generate Playlist</span>
                         <span class="btn-loading">🔄 Generating...</span>
                     </button>
+                    <!-- fairydust payment button -->
+                    <div id="fairydust-generate-button"></div>
                 </form>
             </div>
 
@@ -106,6 +114,68 @@
             </div>
         </div>
     </div>
+
+    <!-- fairydust Integration -->
+    <script>
+        // Initialize fairydust
+        const fairydust = new Fairydust.Fairydust({
+            appId: '4c890b06-e8a0-494e-9445-5fad2e1124af'  // Approved Yoga Playlist Generator
+        });
+
+        // Create account widget
+        fairydust.createAccountComponent('#fairydust-account', {
+            onConnect: (user) => {
+                console.log('fairydust user connected:', user);
+            },
+            onDisconnect: () => {
+                console.log('fairydust user disconnected');
+            }
+        });
+
+        // Dynamic pricing based on duration
+        function getDustCost() {
+            const duration = parseInt(document.getElementById('duration').value || 60);
+            return duration <= 45 ? 5 : 8;  // 5 DUST for ≤45min, 8 DUST for >45min
+        }
+
+        // Update button based on form state
+        function updateFairydustButton() {
+            const cost = getDustCost();
+            const duration = document.getElementById('duration').value || 60;
+            const classType = document.getElementById('class-type').value;
+            
+            const buttonLabel = duration <= 45 
+                ? `Generate Playlist (${cost} DUST)` 
+                : `Generate Extended Playlist (${cost} DUST)`;
+
+            fairydust.createButtonComponent('#fairydust-generate-button', {
+                dustCost: cost,
+                label: buttonLabel,
+                disabled: !classType,  // Disable if no class type selected
+                onSuccess: async (transaction) => {
+                    console.log('fairydust payment successful:', transaction);
+                    
+                    // Trigger the original generate function
+                    const originalBtn = document.getElementById('generate-btn');
+                    if (originalBtn) {
+                        originalBtn.click();
+                    }
+                },
+                onError: (error) => {
+                    console.error('fairydust payment failed:', error);
+                    alert('Payment failed: ' + error);
+                }
+            });
+        }
+
+        // Update button when duration or class type changes
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFairydustButton();
+            
+            document.getElementById('duration').addEventListener('input', updateFairydustButton);
+            document.getElementById('class-type').addEventListener('change', updateFairydustButton);
+        });
+    </script>
 
     <script src="js/app.js"></script>
 </body>
