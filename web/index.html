@@ -18,12 +18,13 @@
 </head>
 <body>
     <div class="container">
-        <header class="header" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
+        <header class="header" style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px;">
+            <div></div> <!-- Empty left spacer -->
+            <div style="text-align: center;">
                 <h1>🧘‍♀️ Yoga Playlist Generator</h1>
                 <p>Creates a personalized playlist and connects to Spotify</p>
             </div>
-            <div id="fairydust-account"></div>
+            <div style="justify-self: end;" id="fairydust-account"></div>
         </header>
 
         <!-- Success/Status Message Area (replaces status bar) -->
