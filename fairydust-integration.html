@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Yoga Playlist Generator - fairydust Integration Example</title>
+    <script src="https://unpkg.com/fairydust-js@latest/dist/index.umd.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/fairydust-js@latest/dist/fairydust.css">
+</head>
+<body>
+    <h1>Quick fairydust Integration</h1>
+    
+    <!-- Account widget -->
+    <div id="account"></div>
+    
+    <!-- Payment button -->
+    <div id="generate-button"></div>
+    
+    <script>
+        // This is all a third-party developer needs!
+        const fairydust = new Fairydust.Fairydust({
+            appId: '4c890b06-e8a0-494e-9445-5fad2e1124af'  // Approved Yoga Playlist Generator
+        });
+
+        fairydust.createAccountComponent('#account');
+        
+        fairydust.createButtonComponent('#generate-button', {
+            dustCost: 5,
+            label: 'Generate Yoga Playlist',
+            onSuccess: async () => {
+                // Your existing app logic here
+                console.log('Generating playlist...');
+            }
+        });
+    </script>
+</body>
+</html>
