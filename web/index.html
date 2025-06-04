@@ -177,20 +177,7 @@
             document.getElementById('duration').addEventListener('input', updateFairydustButton);
             document.getElementById('class-type').addEventListener('change', updateFairydustButton);
             
-            // Override the original form submission handler to prevent conflicts
-            const originalForm = document.getElementById('playlist-form');
-            if (originalForm) {
-                // Remove existing event listeners by cloning the form
-                const newForm = originalForm.cloneNode(true);
-                originalForm.parentNode.replaceChild(newForm, originalForm);
-                
-                // Add our own handler that prevents submission
-                newForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    console.log('Form submission prevented - use fairydust button for payment');
-                    return false;
-                });
-            }
+            // No need to prevent form submission - fairydust button type="button" handles this
         });
     </script>
 
