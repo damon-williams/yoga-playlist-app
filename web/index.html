@@ -134,21 +134,17 @@
             }
         });
 
-        // Dynamic pricing based on duration
+        // Fixed pricing
         function getDustCost() {
-            const duration = parseInt(document.getElementById('duration').value || 60);
-            return duration <= 45 ? 5 : 8;  // 5 DUST for ≤45min, 8 DUST for >45min
+            return 2;  // Fixed 2 DUST cost
         }
 
         // Update button based on form state
         function updateFairydustButton() {
             const cost = getDustCost();
-            const duration = document.getElementById('duration').value || 60;
             const classType = document.getElementById('class-type').value;
             
-            const buttonLabel = duration <= 45 
-                ? `Generate Playlist (${cost} DUST)` 
-                : `Generate Extended Playlist (${cost} DUST)`;
+            const buttonLabel = 'Generate Playlist';
 
             fairydust.createButtonComponent('#fairydust-generate-button', {
                 dustCost: cost,
