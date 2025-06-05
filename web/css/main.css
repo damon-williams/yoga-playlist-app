@@ -282,13 +282,19 @@ input[type="range"]::-moz-range-thumb {
 
 #fairydust-generate-button > * {
     width: 100% !important;
-    text-align: center !important;
 }
 
-/* Center button text properly */
-.fairydust-button span {
+/* Center button text properly - target the main text span */
+.fairydust-button {
     text-align: center !important;
-    display: block !important;
+    justify-content: center !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.fairydust-button > span:first-child {
+    flex: 1 !important;
+    text-align: center !important;
 }
 
 /* Account widget styling */

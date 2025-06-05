@@ -123,11 +123,12 @@
                 return;
             }
 
-            // Initialize fairydust
+            // Initialize fairydust with debug enabled
             const fairydust = new Fairydust.Fairydust({
                 appId: '4c890b06-e8a0-494e-9445-5fad2e1124af',
                 apiUrl: 'https://fairydust-identity-production.up.railway.app',
-                ledgerUrl: 'https://fairydust-ledger-production.up.railway.app'
+                ledgerUrl: 'https://fairydust-ledger-production.up.railway.app',
+                debug: true
             });
 
             // Create account widget
@@ -163,7 +164,13 @@
                     },
                     onError: (error) => {
                         console.error('fairydust payment failed:', error);
-                        alert('Payment failed: ' + error);
+                        console.log('Error details:', typeof error, error);
+                        // More user-friendly error handling
+                        if (error.includes && error.includes('401')) {
+                            alert('Authentication required. Please try again.');
+                        } else {
+                            alert('Payment failed: ' + error);
+                        }
                     }
                 });
             }
