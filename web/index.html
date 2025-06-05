@@ -126,8 +126,8 @@
             // Initialize fairydust
             const fairydust = new Fairydust.Fairydust({
                 appId: '4c890b06-e8a0-494e-9445-5fad2e1124af',
-                apiUrl: 'https://api.fairydust.fun',
-                ledgerUrl: 'https://ledger.fairydust.fun'
+                apiUrl: 'https://fairydust-identity-production.up.railway.app',
+                ledgerUrl: 'https://fairydust-ledger-production.up.railway.app'
             });
 
             // Create account widget
@@ -148,7 +148,7 @@
                 
                 fairydust.createButtonComponent('#fairydust-generate-button', {
                     dustCost: 2,
-                    children: 'Generate Playlist (2 DUST)',
+                    children: 'Generate Playlist',
                     disabled: !classType,
                     onSuccess: async (transaction) => {
                         console.log('fairydust payment successful:', transaction);

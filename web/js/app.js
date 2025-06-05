@@ -255,8 +255,12 @@ async function checkSystemStatus() {
 
 function updateStatus(elementId, text, statusClass) {
     const element = document.getElementById(elementId);
-    element.textContent = text;
-    element.className = `status-value ${statusClass}`;
+    if (element) {
+        element.textContent = text;
+        element.className = `status-value ${statusClass}`;
+    } else {
+        console.log(`Status update: ${elementId} - ${text} (${statusClass})`);
+    }
 }
 
 async function loadYogaClasses() {

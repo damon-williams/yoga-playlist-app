@@ -282,6 +282,13 @@ input[type="range"]::-moz-range-thumb {
 
 #fairydust-generate-button > * {
     width: 100% !important;
+    text-align: center !important;
+}
+
+/* Center button text properly */
+.fairydust-button span {
+    text-align: center !important;
+    display: block !important;
 }
 
 /* Account widget styling */
