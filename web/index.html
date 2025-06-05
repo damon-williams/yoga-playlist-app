@@ -132,7 +132,7 @@
             });
 
             // Create account widget
-            fairydust.createAccountComponent('#fairydust-account', {
+            const accountComponent = fairydust.createAccountComponent('#fairydust-account', {
                 onConnect: (user) => {
                     console.log('fairydust user connected:', user);
                     updateFairydustButton();
@@ -140,6 +140,9 @@
                 onDisconnect: () => {
                     console.log('fairydust user disconnected');
                     updateFairydustButton();
+                },
+                onBalanceUpdate: (balance) => {
+                    console.log('Balance updated:', balance);
                 }
             });
 
@@ -153,6 +156,11 @@
                     disabled: !classType,
                     onSuccess: async (transaction) => {
                         console.log('fairydust payment successful:', transaction);
+                        
+                        // Refresh account component to show updated balance and connected state
+                        if (accountComponent && accountComponent.refresh) {
+                            await accountComponent.refresh();
+                        }
                         
                         // Call the playlist generation function
                         if (typeof handlePlaylistGeneration === 'function') {

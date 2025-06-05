@@ -406,11 +406,27 @@ async function handlePlaylistGeneration(event) {
 }
 
 function setGeneratingState(isGenerating) {
-    generateBtn.disabled = isGenerating;
-    if (isGenerating) {
-        generateBtn.classList.add('loading');
-    } else {
-        generateBtn.classList.remove('loading');
+    // The generate button is now handled by fairydust SDK
+    // We can find the actual button element that was created
+    const fairydustButton = document.querySelector('#fairydust-generate-button button');
+    
+    if (fairydustButton) {
+        fairydustButton.disabled = isGenerating;
+        if (isGenerating) {
+            fairydustButton.classList.add('loading');
+        } else {
+            fairydustButton.classList.remove('loading');
+        }
+    }
+    
+    // Also handle the legacy generateBtn reference if it exists
+    if (generateBtn) {
+        generateBtn.disabled = isGenerating;
+        if (isGenerating) {
+            generateBtn.classList.add('loading');
+        } else {
+            generateBtn.classList.remove('loading');
+        }
     }
 }
 
