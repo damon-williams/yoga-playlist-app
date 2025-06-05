@@ -146,11 +146,25 @@
                 }
             });
 
+            // Use the SDK's built-in method to refresh all account components
+            // This is called whenever authentication state changes
+            async function refreshAllAccountComponents() {
+                try {
+                    if (fairydust.refreshAccountComponents) {
+                        await fairydust.refreshAccountComponents();
+                    } else if (accountComponent && accountComponent.refresh) {
+                        await accountComponent.refresh();
+                    }
+                } catch (error) {
+                    console.log('Account component refresh error (expected during auth flow):', error);
+                }
+            }
+
             // Create payment button
             function updateFairydustButton() {
                 const classType = document.getElementById('class-type').value;
                 
-                fairydust.createButtonComponent('#fairydust-generate-button', {
+                const buttonComponent = fairydust.createButtonComponent('#fairydust-generate-button', {
                     dustCost: 2,
                     children: 'Generate Playlist',
                     disabled: !classType,
@@ -158,9 +172,7 @@
                         console.log('fairydust payment successful:', transaction);
                         
                         // Refresh account component to show updated balance and connected state
-                        if (accountComponent && accountComponent.refresh) {
-                            await accountComponent.refresh();
-                        }
+                        await refreshAllAccountComponents();
                         
                         // Call the playlist generation function
                         if (typeof handlePlaylistGeneration === 'function') {
@@ -185,6 +197,27 @@
 
             // Update button when form changes
             document.getElementById('class-type').addEventListener('change', updateFairydustButton);
+            
+            // Listen for authentication success from button component
+            document.addEventListener('fairydust:success', async (event) => {
+                console.log('Authentication successful, refreshing account component');
+                // Refresh account component when authentication happens anywhere
+                if (accountComponent && accountComponent.refresh) {
+                    await accountComponent.refresh();
+                }
+            });
+            
+            // Refresh account components after a short delay when authentication might have happened
+            // This handles the case where button authentication succeeds but doesn't notify account component
+            const authCheckInterval = setInterval(async () => {
+                if (fairydust.getAPI().isAuthenticated()) {
+                    const accountWidget = document.querySelector('#fairydust-account .fairydust-account');
+                    if (accountWidget && !accountWidget.classList.contains('connected')) {
+                        console.log('Detected authentication state mismatch, refreshing account component');
+                        await refreshAllAccountComponents();
+                    }
+                }
+            }, 1000); // Check every second
             
             // Initial button creation
             updateFairydustButton();
