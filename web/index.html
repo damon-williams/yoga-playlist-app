@@ -145,19 +145,13 @@
                 onConnect: (user) => {
                     console.log('fairydust user connected:', user);
                     updateFairydustButton();
-                    // Sync to mobile component
-                    if (accountComponentMobile) accountComponentMobile.refresh();
                 },
                 onDisconnect: () => {
                     console.log('fairydust user disconnected');
                     updateFairydustButton();
-                    // Sync to mobile component
-                    if (accountComponentMobile) accountComponentMobile.refresh();
                 },
                 onBalanceUpdate: (balance) => {
                     console.log('Balance updated:', balance);
-                    // Sync to mobile component
-                    if (accountComponentMobile) accountComponentMobile.refresh();
                 }
             });
 
@@ -165,19 +159,13 @@
                 onConnect: (user) => {
                     console.log('fairydust user connected:', user);
                     updateFairydustButton();
-                    // Sync to desktop component
-                    if (accountComponentDesktop) accountComponentDesktop.refresh();
                 },
                 onDisconnect: () => {
                     console.log('fairydust user disconnected');
                     updateFairydustButton();
-                    // Sync to desktop component
-                    if (accountComponentDesktop) accountComponentDesktop.refresh();
                 },
                 onBalanceUpdate: (balance) => {
                     console.log('Balance updated:', balance);
-                    // Sync to desktop component
-                    if (accountComponentDesktop) accountComponentDesktop.refresh();
                 }
             });
 
@@ -190,9 +178,14 @@
                 try {
                     if (fairydust.refreshAccountComponents) {
                         await fairydust.refreshAccountComponents();
-                    } else if (accountComponent && accountComponent.refresh) {
-                        // Use the fixed refresh method that properly checks authentication state
-                        await accountComponent.refresh();
+                    } else {
+                        // Refresh both components separately to avoid cross-triggering
+                        if (accountComponentDesktop && accountComponentDesktop.refresh) {
+                            await accountComponentDesktop.refresh();
+                        }
+                        if (accountComponentMobile && accountComponentMobile.refresh) {
+                            await accountComponentMobile.refresh();
+                        }
                     }
                 } catch (error) {
                     console.log('Account component refresh error (expected during auth flow):', error);
@@ -239,11 +232,9 @@
             
             // Listen for authentication success from button component
             document.addEventListener('fairydust:success', async (event) => {
-                console.log('Authentication successful, refreshing account component');
-                // Refresh account component when authentication happens anywhere
-                if (accountComponent && accountComponent.refresh) {
-                    await accountComponent.refresh();
-                }
+                console.log('Authentication successful, refreshing account components');
+                // Refresh both account components when authentication happens anywhere
+                await refreshAllAccountComponents();
             });
             
             // Track if we've already refreshed to prevent infinite loops
