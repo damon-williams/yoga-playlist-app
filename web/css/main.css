@@ -275,12 +275,23 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* fairydust integration styling */
-.fairydust-button-wrapper {
+#fairydust-generate-button {
     width: 100%;
+    margin-top: 20px;
 }
 
-.fairydust-button-wrapper > * {
-    width: 100%;
+#fairydust-generate-button > * {
+    width: 100% !important;
+}
+
+/* Account widget styling */
+#fairydust-account {
+    min-width: 200px;
+}
+
+/* Ensure fairydust modals appear above other content */
+.fairydust-modal {
+    z-index: 10000 !important;
 }
 
 /* Output Content */
