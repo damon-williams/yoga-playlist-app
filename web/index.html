@@ -18,13 +18,22 @@
 </head>
 <body>
     <div class="container">
-        <header class="header" style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px;">
-            <div></div> <!-- Empty left spacer -->
-            <div style="text-align: center;">
-                <h1>🧘‍♀️ Yoga Playlist Generator</h1>
-                <p>Creates a personalized playlist and connects to Spotify</p>
+        <header class="header">
+            <div class="header-desktop">
+                <div></div> <!-- Empty left spacer -->
+                <div style="text-align: center;">
+                    <h1>🧘‍♀️ Yoga Playlist Generator</h1>
+                    <p>Creates a personalized playlist and connects to Spotify</p>
+                </div>
+                <div style="justify-self: end;" id="fairydust-account-desktop"></div>
             </div>
-            <div style="justify-self: end;" id="fairydust-account"></div>
+            <div class="header-mobile">
+                <div style="text-align: center;">
+                    <h1>🧘‍♀️ Yoga Playlist Generator</h1>
+                    <p>Creates a personalized playlist and connects to Spotify</p>
+                </div>
+                <div id="fairydust-account-mobile" style="display: flex; justify-content: center; margin-top: 15px;"></div>
+            </div>
         </header>
 
         <!-- Success/Status Message Area (replaces status bar) -->
@@ -131,20 +140,49 @@
                 debug: true
             });
 
-            // Create account widget
-            const accountComponent = fairydust.createAccountComponent('#fairydust-account', {
+            // Create account widgets for both desktop and mobile
+            const accountComponentDesktop = fairydust.createAccountComponent('#fairydust-account-desktop', {
                 onConnect: (user) => {
                     console.log('fairydust user connected:', user);
                     updateFairydustButton();
+                    // Sync to mobile component
+                    if (accountComponentMobile) accountComponentMobile.refresh();
                 },
                 onDisconnect: () => {
                     console.log('fairydust user disconnected');
                     updateFairydustButton();
+                    // Sync to mobile component
+                    if (accountComponentMobile) accountComponentMobile.refresh();
                 },
                 onBalanceUpdate: (balance) => {
                     console.log('Balance updated:', balance);
+                    // Sync to mobile component
+                    if (accountComponentMobile) accountComponentMobile.refresh();
                 }
             });
+
+            const accountComponentMobile = fairydust.createAccountComponent('#fairydust-account-mobile', {
+                onConnect: (user) => {
+                    console.log('fairydust user connected:', user);
+                    updateFairydustButton();
+                    // Sync to desktop component
+                    if (accountComponentDesktop) accountComponentDesktop.refresh();
+                },
+                onDisconnect: () => {
+                    console.log('fairydust user disconnected');
+                    updateFairydustButton();
+                    // Sync to desktop component
+                    if (accountComponentDesktop) accountComponentDesktop.refresh();
+                },
+                onBalanceUpdate: (balance) => {
+                    console.log('Balance updated:', balance);
+                    // Sync to desktop component
+                    if (accountComponentDesktop) accountComponentDesktop.refresh();
+                }
+            });
+
+            // Keep reference to active component for refresh methods
+            const accountComponent = accountComponentDesktop;
 
             // Use the SDK's built-in method to refresh all account components
             // This is called whenever authentication state changes
