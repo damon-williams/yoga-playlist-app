@@ -274,6 +274,15 @@ input[type="range"]::-moz-range-thumb {
     display: inline;
 }
 
+/* fairydust integration styling */
+.fairydust-button-wrapper {
+    width: 100%;
+}
+
+.fairydust-button-wrapper > * {
+    width: 100%;
+}
+
 /* Output Content */
 .placeholder {
     text-align: center;

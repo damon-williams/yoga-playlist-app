@@ -8,9 +8,8 @@
     <base href="https://yoga-playlist-app.vercel.app/">
       <!-- Load CSS with absolute path -->
     <link rel="stylesheet" href="https://yoga-playlist-app.vercel.app/css/main.css">
-    <!-- fairydust SDK  -->
-    <script src="https://fairydust.fun/sdk/index.umd.js"></script>
-    <link rel="stylesheet" href="https://fairydust.fun/sdk/fairydust.css">
+    <!-- fairydust Simple SDK -->
+    <script src="https://fairydust.fun/sdk/simple.js?app=4c890b06-e8a0-494e-9445-5fad2e1124af"></script>
     <script>
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);var n=t;if("undefined"!=typeof e)try{n=t[e]}catch(r){}return n}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
     posthog.init('phc_wANN8fAdn8bek8ZzbcZpZGOzRp6TfOfVPvW7CKq3B6m',{api_host:'https://app.posthog.com'})
@@ -61,14 +60,12 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="generate-btn" class="generate-btn" style="display: none;">
-                        <span class="btn-text">Generate Playlist</span>
-                        <span class="btn-loading">🔄 Generating...</span>
-                    </button>
                 </form>
                 
-                <!-- fairydust payment button outside form to prevent form submission -->
-                <div id="fairydust-generate-button"></div>
+                <!-- fairydust payment button -->
+                <button class="fairydust-button generate-btn" data-cost="2" id="generate-btn" onclick="generatePlaylist()">
+                    Generate Playlist (2 DUST)
+                </button>
             </div>
 
             <div class="output-panel">
@@ -117,68 +114,33 @@
         </div>
     </div>
 
-    <!-- fairydust Integration -->
+    <!-- Simple fairydust Integration -->
     <script>
-        // Initialize fairydust
-        const fairydust = new Fairydust.Fairydust({
-            appId: '4c890b06-e8a0-494e-9445-5fad2e1124af',  // Approved Yoga Playlist Generator
-            apiUrl: 'https://fairydust-identity-production.up.railway.app',
-            ledgerUrl: 'https://fairydust-ledger-production.up.railway.app'
-        });
-
-        // Create account widget
-        fairydust.createAccountComponent('#fairydust-account', {
-            onConnect: (user) => {
-                console.log('fairydust user connected:', user);
-            },
-            onDisconnect: () => {
-                console.log('fairydust user disconnected');
+        // Generate playlist function for the button
+        async function generatePlaylist() {
+            // Call the existing playlist generation function
+            if (typeof handlePlaylistGeneration === 'function') {
+                const fakeEvent = { preventDefault: () => {} };
+                await handlePlaylistGeneration(fakeEvent);
+            } else {
+                console.error('handlePlaylistGeneration function not found');
             }
-        });
-
-        // Fixed pricing
-        function getDustCost() {
-            return 2;  // Fixed 2 DUST cost
         }
 
-        // Update button based on form state
-        function updateFairydustButton() {
-            const cost = getDustCost();
-            const classType = document.getElementById('class-type').value;
-            
-            const buttonLabel = 'Generate Playlist';
-
-            fairydust.createButtonComponent('#fairydust-generate-button', {
-                dustCost: cost,
-                children: buttonLabel,
-                disabled: !classType,  // Disable if no class type selected
-                onSuccess: async (transaction) => {
-                    console.log('fairydust payment successful:', transaction);
-                    
-                    // Call the playlist generation function directly
-                    if (typeof handlePlaylistGeneration === 'function') {
-                        // Create a fake event object to pass to the function
-                        const fakeEvent = { preventDefault: () => {} };
-                        await handlePlaylistGeneration(fakeEvent);
-                    } else {
-                        console.error('handlePlaylistGeneration function not found');
-                    }
-                },
-                onError: (error) => {
-                    console.error('fairydust payment failed:', error);
-                    alert('Payment failed: ' + error);
-                }
-            });
-        }
-
-        // Update button when duration or class type changes
+        // Update button disabled state when form changes
         document.addEventListener('DOMContentLoaded', () => {
-            updateFairydustButton();
+            const generateBtn = document.getElementById('generate-btn');
+            const classTypeSelect = document.getElementById('class-type');
             
-            document.getElementById('duration').addEventListener('input', updateFairydustButton);
-            document.getElementById('class-type').addEventListener('change', updateFairydustButton);
+            function updateButtonState() {
+                generateBtn.disabled = !classTypeSelect.value;
+            }
             
-            // No need to prevent form submission - fairydust button type="button" handles this
+            // Initial state
+            updateButtonState();
+            
+            // Update when class type changes
+            classTypeSelect.addEventListener('change', updateButtonState);
         });
     </script>
 
