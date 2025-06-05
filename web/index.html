@@ -153,6 +153,7 @@
                     if (fairydust.refreshAccountComponents) {
                         await fairydust.refreshAccountComponents();
                     } else if (accountComponent && accountComponent.refresh) {
+                        // Use the fixed refresh method that properly checks authentication state
                         await accountComponent.refresh();
                     }
                 } catch (error) {
@@ -207,17 +208,21 @@
                 }
             });
             
+            // Track if we've already refreshed to prevent infinite loops
+            let hasRefreshedAfterAuth = false;
+            
             // Refresh account components after a short delay when authentication might have happened
             // This handles the case where button authentication succeeds but doesn't notify account component
             const authCheckInterval = setInterval(async () => {
-                if (fairydust.getAPI().isAuthenticated()) {
-                    const accountWidget = document.querySelector('#fairydust-account .fairydust-account');
-                    if (accountWidget && !accountWidget.classList.contains('connected')) {
-                        console.log('Detected authentication state mismatch, refreshing account component');
-                        await refreshAllAccountComponents();
-                    }
+                if (fairydust.getAPI().isAuthenticated() && !hasRefreshedAfterAuth) {
+                    console.log('User is authenticated, attempting to refresh account component once');
+                    hasRefreshedAfterAuth = true;
+                    await refreshAllAccountComponents();
+                    
+                    // Clear the interval after the first successful refresh attempt
+                    clearInterval(authCheckInterval);
                 }
-            }, 1000); // Check every second
+            }, 2000); // Check every 2 seconds, less aggressive
             
             // Initial button creation
             updateFairydustButton();
