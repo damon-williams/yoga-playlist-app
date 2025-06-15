@@ -52,11 +52,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const pendingPlaylist = localStorage.getItem('pendingPlaylist');
     
     if (authCode && pendingPlaylist) {
+        console.log('🔄 Spotify auth code detected, processing playlist creation...');
         // User has returned from Spotify - auto-create the playlist
         setTimeout(() => {
-            const playlistData = JSON.parse(pendingPlaylist);
-            createPlaylistWithAuthCodeForReturn(playlistData.playlistName, playlistData.trackIds, authCode);
-        }, 1000); // Small delay to ensure page is fully loaded
+            try {
+                const playlistData = JSON.parse(pendingPlaylist);
+                console.log('📦 Pending playlist data:', playlistData);
+                createPlaylistWithAuthCodeForReturn(playlistData.playlistName, playlistData.trackIds, authCode);
+            } catch (error) {
+                console.error('❌ Error processing pending playlist:', error);
+                showSuccessMessage('❌ Error processing playlist data. Please try again.', true);
+            }
+        }, 1500); // Increased delay to ensure page is fully loaded
     }
 });
 
@@ -432,6 +439,7 @@ function setGeneratingState(isGenerating) {
 
 async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode) {
     try {
+        console.log('🎵 Starting playlist creation for return from Spotify...');
         showSuccessMessage('🔄 Creating your Spotify playlist...');
         
         const response = await fetch(`${API_BASE_URL}/create-spotify-playlist`, {
@@ -448,15 +456,30 @@ async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authC
         });
         
         const data = await response.json();
+        console.log('📡 Spotify API response:', data);
         
         if (data.success) {
+            console.log('✅ Playlist created successfully!');
             showSuccessMessage(`🎉 Success! Created playlist "${playlistName}". <a href="${data.playlist_url}" target="_blank">Open in Spotify</a>`);
             localStorage.removeItem('pendingPlaylist');
+            
+            // Also update the export result if it exists
+            const exportResult = document.getElementById('export-result');
+            if (exportResult) {
+                exportResult.className = 'success';
+                exportResult.innerHTML = `
+                    <strong>🎉 Success!</strong><br>
+                    ${data.message}<br>
+                    <a href="${data.playlist_url}" target="_blank">Open in Spotify</a>
+                `;
+            }
         } else {
+            console.error('❌ Playlist creation failed:', data.error);
             showSuccessMessage(`❌ Error: ${data.error}`, true);
         }
         
     } catch (error) {
+        console.error('❌ Network error during playlist creation:', error);
         showSuccessMessage(`❌ Network error: ${error.message}`, true);
     }
 }
@@ -695,9 +718,20 @@ function showSuccessMessage(message, isError = false) {
     const successArea = document.getElementById('success-area');
     const successContent = document.getElementById('success-content');
     
+    // Ensure elements exist before trying to use them
+    if (!successArea || !successContent) {
+        console.error('Success message elements not found, retrying...');
+        // Retry after a short delay if elements aren't ready
+        setTimeout(() => showSuccessMessage(message, isError), 500);
+        return;
+    }
+    
     successContent.innerHTML = message;
     successArea.className = isError ? 'success-area error' : 'success-area';
     successArea.style.display = 'block';
+    
+    // Scroll to top to ensure message is visible
+    window.scrollTo(0, 0);
     
     // Auto-hide after 10 seconds unless it contains a link
     if (!message.includes('<a ')) {
