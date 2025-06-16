@@ -10,8 +10,8 @@ window.posthog = {
 
 // Safe PostHog capture function
 function captureEvent(eventName, properties) {
-    if (typeof posthog !== 'undefined' && captureEvent) {
-        captureEvent(eventName, properties);
+    if (typeof posthog !== 'undefined' && posthog.capture) {
+        posthog.capture(eventName, properties);
     } else {
         console.log('PostHog not ready - would have tracked:', eventName, properties);
     }
