@@ -113,19 +113,40 @@ window.selectClassCard = function(card) {
         hiddenInput.dispatchEvent(new Event('change'));
     }
     
-    // Pre-populate music preferences based on class type
+    // Pre-populate music preferences based on class type (with flexible matching)
     const musicSuggestions = {
+        // Vinyasa variations
         'Vinyasa': 'Upbeat, rhythmic, flowing energy',
+        'Vinyasa Flow': 'Upbeat, rhythmic, flowing energy',
+        'Flow': 'Upbeat, rhythmic, flowing energy',
+        
+        // Yin variations
         'Yin': 'Ambient, peaceful, meditative soundscapes',
+        'Yin Yoga': 'Ambient, peaceful, meditative soundscapes',
+        
+        // Power variations
         'Power': 'Energetic, driving beats, motivational',
+        'Power Yoga': 'Energetic, driving beats, motivational',
+        'Power Flow': 'Energetic, driving beats, motivational',
+        
+        // Hatha variations
         'Hatha': 'Calm, grounding, gentle rhythms',
+        'Traditional Hatha': 'Calm, grounding, gentle rhythms',
+        'Hatha Yoga': 'Calm, grounding, gentle rhythms',
+        
+        // Other common types
         'Restorative': 'Soft, healing, minimal melodies',
         'Ashtanga': 'Traditional, steady rhythm, focused',
         'Hot Yoga': 'Intense, powerful, sweat-inducing beats',
-        'Gentle': 'Soothing, slow tempo, relaxing'
+        'Bikram': 'Intense, powerful, sweat-inducing beats',
+        'Gentle': 'Soothing, slow tempo, relaxing',
+        'Gentle Flow': 'Soothing, slow tempo, relaxing',
+        'Yoga Sculpt': 'High-energy, motivational beats, workout vibes',
+        'Sculpt': 'High-energy, motivational beats, workout vibes'
     };
     
     console.log('🎵 Trying to update music preferences for class:', className);
+    console.log('🎵 Available suggestions:', Object.keys(musicSuggestions));
     
     // Use a small delay to ensure DOM is ready
     setTimeout(() => {
@@ -137,6 +158,8 @@ window.selectClassCard = function(card) {
                 musicPreferencesElement.value = musicSuggestions[className];
                 console.log('✅ Updated music preferences to:', musicSuggestions[className]);
             } else {
+                console.log('❌ No suggestion found for:', className);
+                console.log('❌ Exact match failed. Available keys:', Object.keys(musicSuggestions));
                 musicPreferencesElement.value = '';
                 console.log('🔄 Cleared music preferences (no suggestion for class)');
             }
