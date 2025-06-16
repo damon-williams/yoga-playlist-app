@@ -125,25 +125,65 @@ window.selectClassCard = function(card) {
         'Gentle': 'Soothing, slow tempo, relaxing'
     };
     
-    const musicPreferencesElement = document.getElementById('music-preferences');
-    if (musicPreferencesElement && musicSuggestions[className]) {
-        // Always update the value when a new class is selected
-        musicPreferencesElement.value = musicSuggestions[className];
-        musicPreferencesElement.placeholder = musicSuggestions[className];
-        console.log('Updated music preferences for', className, ':', musicSuggestions[className]);
-    } else if (musicPreferencesElement) {
-        // Clear if no suggestion available
-        musicPreferencesElement.value = '';
-        musicPreferencesElement.placeholder = 'Optional - provide some direction to the AI...';
-    }
+    console.log('🎵 Trying to update music preferences for class:', className);
+    
+    // Use a small delay to ensure DOM is ready
+    setTimeout(() => {
+        const musicPreferencesElement = document.getElementById('music-preferences');
+        console.log('🎵 Music element found:', !!musicPreferencesElement);
+        
+        if (musicPreferencesElement) {
+            if (musicSuggestions[className]) {
+                musicPreferencesElement.value = musicSuggestions[className];
+                console.log('✅ Updated music preferences to:', musicSuggestions[className]);
+            } else {
+                musicPreferencesElement.value = '';
+                console.log('🔄 Cleared music preferences (no suggestion for class)');
+            }
+        } else {
+            console.error('❌ Could not find music-preferences element!');
+        }
+    }, 50);
     
     // Button update is handled by the change event now
 };
 
 // Handle add custom class
 window.handleAddCustomClass = function() {
-    // For now, just show a message about custom classes being a future feature
-    showSuccessMessage('🚧 Custom class types coming soon! This will require fairydust authentication.', false);
+    // Check if user is connected to fairydust
+    // We'll check for the presence of fairydust SDK and connection
+    
+    // First check if fairydust SDK is loaded
+    if (typeof Fairydust === 'undefined') {
+        showSuccessMessage('❌ fairydust SDK not loaded. Please refresh the page.', true);
+        return;
+    }
+    
+    // Try to find a connected user (this is a simplified check)
+    const accountDesktop = document.querySelector('#fairydust-account-desktop');
+    const accountMobile = document.querySelector('#fairydust-account-mobile');
+    
+    // Check if user appears to be connected (look for user info in the DOM)
+    const isConnected = (accountDesktop && accountDesktop.textContent.includes('DUST')) || 
+                       (accountMobile && accountMobile.textContent.includes('DUST'));
+    
+    if (!isConnected) {
+        showSuccessMessage('🔐 Please connect with fairydust (top right) to add custom class types. Custom classes are tied to your account.', true);
+        
+        // Pulse the account component to draw attention
+        [accountDesktop, accountMobile].forEach(component => {
+            if (component) {
+                component.style.animation = 'pulse 1s ease-in-out 3';
+                setTimeout(() => {
+                    component.style.animation = '';
+                }, 3000);
+            }
+        });
+        return;
+    }
+    
+    // User is connected, show the custom class interface
+    showAddNewClassInterface();
 };
 
 function handleClassTypeChange() {
@@ -151,21 +191,47 @@ function handleClassTypeChange() {
 }
 
 function showAddNewClassInterface() {
-    // Replace the select with input fields
-    const formGroup = classTypeSelect.closest('.form-group');
+    // Replace the card grid with input fields
+    const formGroup = document.querySelector('.form-group');
     
     formGroup.innerHTML = `
-        <label for="new-class-name">New Class Name</label>
-        <input type="text" id="new-class-name" placeholder="e.g., Hot Power Flow" required>
-        
-        <label for="new-class-description">Class Description</label>
-        <textarea id="new-class-description" placeholder="Describe the style, intensity, and focus of this class..." required></textarea>
-        
-        <div class="add-class-actions">
-            <button type="button" id="save-new-class" class="save-class-btn">Save & Use This Class</button>
-            <button type="button" id="cancel-new-class" class="cancel-btn">Cancel</button>
+        <label>Add Custom Class Type</label>
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2);">
+            <div style="margin-bottom: 15px;">
+                <label for="new-class-name" style="color: #333; font-size: 0.9rem; margin-bottom: 5px;">Class Name</label>
+                <input type="text" id="new-class-name" placeholder="e.g., Hot Power Flow" required style="margin-bottom: 10px;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="new-class-description" style="color: #333; font-size: 0.9rem; margin-bottom: 5px;">Class Description</label>
+                <textarea id="new-class-description" placeholder="Describe the style, intensity, and focus of this class..." required style="min-height: 80px;"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button type="button" id="save-new-class" style="
+                    background: rgba(103, 58, 183, 0.8); 
+                    color: white; 
+                    border: none; 
+                    padding: 12px 20px; 
+                    border-radius: 8px; 
+                    cursor: pointer;
+                    font-weight: 500;
+                ">💾 Save & Use This Class</button>
+                <button type="button" id="cancel-new-class" style="
+                    background: transparent; 
+                    color: #666; 
+                    border: 1px solid #ccc; 
+                    padding: 12px 20px; 
+                    border-radius: 8px; 
+                    cursor: pointer;
+                ">❌ Cancel</button>
+            </div>
         </div>
+        <input type="hidden" id="class-type" required>
     `;
+    
+    // Re-assign the global reference to the hidden input
+    window.classTypeSelect = document.getElementById('class-type');
     
     // Add event listeners for new buttons
     document.getElementById('save-new-class').addEventListener('click', saveNewClass);
@@ -247,13 +313,19 @@ async function saveNewClass() {
                 timestamp: new Date().toISOString()
             });
             
-            // Success! Reload the classes and select the new one
+            // Success! Reload the classes
             await loadYogaClasses();
             
-            // Select the newly added class
-            classTypeSelect.value = name;
+            // Show success message
+            showSuccessMessage(`✅ Class "${name}" added successfully! You can now select it from the cards above.`, false);
             
-            alert(`✅ Class "${name}" added successfully!`);
+            // Auto-select the newly added class after cards load
+            setTimeout(() => {
+                const newCard = document.querySelector(`[data-class-name="${name}"]`);
+                if (newCard) {
+                    selectClassCard(newCard);
+                }
+            }, 500);
         } else {
             // Track class addition failure
             posthog.capture('add_class_error', {
@@ -285,8 +357,8 @@ async function saveNewClass() {
 }
 
 function cancelNewClass() {
-    // Reload the page to restore the original dropdown
-    location.reload();
+    // Reload the classes to restore the card interface
+    loadYogaClasses();
 }
 
 async function checkSystemStatus() {
