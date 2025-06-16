@@ -84,10 +84,54 @@ function setupEventListeners() {
     classTypeSelect.addEventListener('change', handleClassTypeChange);
 }
 
-function handleClassTypeChange() {
-    if (classTypeSelect.value === '__ADD_NEW__') {
-        showAddNewClassInterface();
+// Handle class card selection
+window.selectClassCard = function(card) {
+    // Remove previous selection
+    document.querySelectorAll('.class-card').forEach(c => {
+        c.style.background = 'rgba(255, 255, 255, 0.1)';
+        c.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+    });
+    
+    // Highlight selected card
+    card.style.background = 'rgba(103, 58, 183, 0.3)';
+    card.style.borderColor = 'rgba(103, 58, 183, 0.8)';
+    
+    // Set hidden input value
+    const className = card.getAttribute('data-class-name');
+    const description = card.getAttribute('data-description');
+    document.getElementById('class-type').value = className;
+    
+    // Pre-populate music preferences based on class type
+    const musicSuggestions = {
+        'Vinyasa': 'Upbeat, rhythmic, flowing energy',
+        'Yin': 'Ambient, peaceful, meditative soundscapes',
+        'Power': 'Energetic, driving beats, motivational',
+        'Hatha': 'Calm, grounding, gentle rhythms',
+        'Restorative': 'Soft, healing, minimal melodies',
+        'Ashtanga': 'Traditional, steady rhythm, focused',
+        'Hot Yoga': 'Intense, powerful, sweat-inducing beats',
+        'Gentle': 'Soothing, slow tempo, relaxing'
+    };
+    
+    const musicPreferences = document.getElementById('music-preferences');
+    if (musicSuggestions[className]) {
+        musicPreferences.placeholder = musicSuggestions[className];
+        // Optionally pre-fill if empty
+        if (!musicPreferences.value) {
+            musicPreferences.value = musicSuggestions[className];
+        }
     }
+};
+
+// Handle add custom class
+window.handleAddCustomClass = function() {
+    // Check if user is logged in with fairydust
+    // For now, just show the interface
+    showAddNewClassInterface();
+};
+
+function handleClassTypeChange() {
+    // This function is no longer needed with cards
 }
 
 function showAddNewClassInterface() {
@@ -289,34 +333,82 @@ async function loadYogaClasses() {
 }
 
 function populateClassSelect(classes) {
-    classTypeSelect.innerHTML = '<option value="">Select a class type...</option>';
+    // Get the form group container
+    const formGroup = classTypeSelect.closest('.form-group');
     
-    // Add existing classes
-    classes.forEach(yogaClass => {
-        const option = document.createElement('option');
-        option.value = yogaClass.name;
-        option.textContent = yogaClass.name;  // ← Only show name
-        option.setAttribute('data-description', yogaClass.description);  // ← Store description
-        classTypeSelect.appendChild(option);
-    });
+    // Replace select with card grid
+    formGroup.innerHTML = `
+        <label>Choose Your Class Type</label>
+        <div class="class-cards-grid" style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        ">
+            ${classes.slice(0, 8).map(yogaClass => `
+                <div 
+                    class="class-card" 
+                    data-class-name="${yogaClass.name}"
+                    data-description="${yogaClass.description}"
+                    onclick="selectClassCard(this)"
+                    style="
+                        padding: 20px 15px;
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 2px solid rgba(255, 255, 255, 0.2);
+                        border-radius: 12px;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        font-weight: 500;
+                        backdrop-filter: blur(10px);
+                    "
+                    onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'; this.style.transform='translateY(-2px)'"
+                    onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.transform='translateY(0)'"
+                >
+                    ${yogaClass.name}
+                </div>
+            `).join('')}
+            
+            <div 
+                class="class-card add-custom-card" 
+                onclick="handleAddCustomClass()"
+                style="
+                    padding: 20px 15px;
+                    background: transparent;
+                    border: 2px dashed rgba(255, 255, 255, 0.3);
+                    border-radius: 12px;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    opacity: 0.7;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 5px;
+                "
+                onmouseover="this.style.opacity='1'; this.style.borderColor='rgba(255, 255, 255, 0.5)'"
+                onmouseout="this.style.opacity='0.7'; this.style.borderColor='rgba(255, 255, 255, 0.3)'"
+            >
+                <span style="font-size: 1.2rem;">+</span> Custom
+            </div>
+        </div>
+        <input type="hidden" id="class-type" required>
+    `;
     
-    // Add "Add New Class" option
-    const addNewOption = document.createElement('option');
-    addNewOption.value = '__ADD_NEW__';
-    addNewOption.textContent = '➕ Add New Class...';
-    classTypeSelect.appendChild(addNewOption);
+    // Re-assign the global reference to the hidden input
+    window.classTypeSelect = document.getElementById('class-type');
 }
 
 async function handlePlaylistGeneration(event) {
     event.preventDefault();
     
-    // Get the selected option element to access the description
-    const selectedOption = classTypeSelect.options[classTypeSelect.selectedIndex];
-    const classDescription = selectedOption.getAttribute('data-description') || '';
+    // Get the selected class card's description
+    const selectedCard = document.querySelector('.class-card[style*="103, 58, 183"]');
+    const classDescription = selectedCard ? selectedCard.getAttribute('data-description') : '';
 
     const formData = {
         class_name: classTypeSelect.value,
-        class_description: classDescription,  // ← Add this
+        class_description: classDescription,
         music_preferences: musicPreferences.value,
         duration: parseInt(durationSlider.value)
     };
@@ -331,7 +423,7 @@ async function handlePlaylistGeneration(event) {
             }
         });
 
-        alert('Please select a class type');
+        showSuccessMessage('❌ Please select a class type by clicking on a card above', true);
         return;
     }
     

@@ -129,6 +129,29 @@ label {
     color: #555;
 }
 
+/* Class Cards Grid */
+.class-cards-grid {
+    margin-bottom: 10px;
+}
+
+.class-card {
+    color: #555;
+    user-select: none;
+}
+
+.class-card.selected {
+    background: rgba(103, 58, 183, 0.3) !important;
+    border-color: rgba(103, 58, 183, 0.8) !important;
+    color: #333;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .class-cards-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
 input, select, textarea {
     width: 100%;
     padding: 12px;
