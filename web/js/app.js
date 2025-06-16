@@ -480,6 +480,7 @@ async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authC
             console.log('✅ Playlist created successfully!');
             showSuccessMessage(`🎉 Success! Created playlist "${playlistName}". <a href="${data.playlist_url}" target="_blank">Open in Spotify</a>`);
             localStorage.removeItem('pendingPlaylist');
+            localStorage.removeItem('spotify_auth_code'); // Clean up stored auth code
             
             // Also update the export result if it exists
             const exportResult = document.getElementById('export-result');
@@ -807,6 +808,7 @@ async function createPlaylistWithAuthCode(playlistName, trackIds, authCode) {
             
             // Clear stored playlist data
             localStorage.removeItem('pendingPlaylist');
+            localStorage.removeItem('spotify_auth_code'); // Clean up stored auth code
             
         } else if (data.needs_auth) {
             // Still needs authorization
@@ -843,7 +845,9 @@ function getSpotifyAuthCodeFromURL() {
     }
     
     if (code) {
-        console.log('✅ Auth code found, cleaning up URL...');
+        console.log('✅ Auth code found, storing and cleaning up URL...');
+        // Store auth code in localStorage for potential reuse
+        localStorage.setItem('spotify_auth_code', code);
         // Clean up the URL
         window.history.replaceState({}, document.title, window.location.pathname);
         return code;
@@ -887,14 +891,38 @@ function displayExportError(message) {
 // Manual trigger for playlist creation when automatic flow fails
 window.triggerManualPlaylistCreation = function() {
     console.log('🔧 Manual playlist creation triggered');
+    console.log('Current URL:', window.location.href);
+    console.log('URL search params:', window.location.search);
     
     // Check if we have a current playlist and auth code
     const authCode = getSpotifyAuthCodeFromURL();
+    console.log('Auth code retrieved:', authCode);
+    
     if (!authCode) {
-        showSuccessMessage('❌ No authorization code found. Please try the Spotify authorization again.', true);
+        // Let's check if there's an auth code that was already cleaned from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentCode = urlParams.get('code');
+        console.log('Current code in URL:', currentCode);
+        
+        // Check localStorage for any stored auth code
+        const storedAuthCode = localStorage.getItem('spotify_auth_code');
+        console.log('Stored auth code:', storedAuthCode);
+        
+        if (storedAuthCode) {
+            console.log('Using stored auth code');
+            proceedWithPlaylistCreation(storedAuthCode);
+        } else {
+            showSuccessMessage('❌ No authorization code found. The URL may have been cleaned already. Please try the Spotify authorization process again from the beginning.', true);
+        }
         return;
     }
     
+    // Store the auth code for potential reuse
+    localStorage.setItem('spotify_auth_code', authCode);
+    proceedWithPlaylistCreation(authCode);
+};
+
+function proceedWithPlaylistCreation(authCode) {
     // Prompt for playlist details
     const playlistName = prompt('Enter playlist name:', 'My Yoga Playlist - ' + new Date().toISOString().split('T')[0]);
     if (!playlistName) return;
@@ -905,6 +933,25 @@ window.triggerManualPlaylistCreation = function() {
         createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode);
     } else {
         showSuccessMessage('❌ No playlist data available. Please generate a playlist first, then export to Spotify.', true);
+    }
+}
+
+// Debug function to check Spotify auth state
+window.debugSpotifyAuth = function() {
+    console.log('=== Spotify Auth Debug Info ===');
+    console.log('Current URL:', window.location.href);
+    console.log('URL search params:', window.location.search);
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log('Code in URL:', urlParams.get('code'));
+    console.log('Error in URL:', urlParams.get('error'));
+    
+    console.log('Stored auth code:', localStorage.getItem('spotify_auth_code'));
+    console.log('Pending playlist:', localStorage.getItem('pendingPlaylist'));
+    console.log('Current playlist data available:', !!currentPlaylistData);
+    
+    if (currentPlaylistData) {
+        console.log('Spotify integration data:', currentPlaylistData.spotify_integration);
     }
 };
 
