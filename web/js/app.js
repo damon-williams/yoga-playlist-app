@@ -8,6 +8,15 @@ window.posthog = {
 };
 */
 
+// Safe PostHog capture function
+function captureEvent(eventName, properties) {
+    if (typeof posthog !== 'undefined' && captureEvent) {
+        captureEvent(eventName, properties);
+    } else {
+        console.log('PostHog not ready - would have tracked:', eventName, properties);
+    }
+}
+
 // Configuration
 const API_BASE_URL = '/api';
 
@@ -34,12 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Yoga Playlist Generator starting...');
     
     // Track app start
-    if (typeof posthog !== 'undefined') {
-        posthog.capture('app_loaded', {
-            timestamp: new Date().toISOString(),
-            user_agent: navigator.userAgent
-        });
-    }
+    captureEvent('app_loaded', {
+        timestamp: new Date().toISOString(),
+        user_agent: navigator.userAgent
+    });
 
     // Setup event listeners
     setupEventListeners();
@@ -288,7 +295,7 @@ async function saveNewClass() {
     const description = descriptionInput.value.trim();
     
     if (!name || !description) {
-        posthog.capture('add_class_error', {
+        captureEvent('add_class_error', {
             error_type: 'validation',
             has_name: !!name,
             has_description: !!description
@@ -298,7 +305,7 @@ async function saveNewClass() {
     }
     
     // Track new class creation attempt
-    posthog.capture('add_class_started', {
+    captureEvent('add_class_started', {
         class_name: name,
         description_length: description.length,
         timestamp: new Date().toISOString()
@@ -336,7 +343,7 @@ async function saveNewClass() {
         
         if (data.success) {
             // Track successful class addition
-            posthog.capture('add_class_success', {
+            captureEvent('add_class_success', {
                 class_name: name,
                 description_length: description.length,
                 save_time_ms: saveTime,
@@ -358,7 +365,7 @@ async function saveNewClass() {
             }, 500);
         } else {
             // Track class addition failure
-            posthog.capture('add_class_error', {
+            captureEvent('add_class_error', {
                 error_type: 'api_error',
                 error_message: data.error,
                 class_name: name,
@@ -372,7 +379,7 @@ async function saveNewClass() {
         console.error('Error adding class:', error);
         
         // Track network error
-        posthog.capture('add_class_error', {
+        captureEvent('add_class_error', {
             error_type: 'network_error',
             error_message: error.message,
             class_name: name,
@@ -653,7 +660,7 @@ async function handlePlaylistGeneration(event) {
     
     if (!formData.class_name) {
         // Track validation error
-        posthog.capture('playlist_generation_error', {
+        captureEvent('playlist_generation_error', {
             error_type: 'validation',
             missing_fields: {
                 class_name: !formData.class_name
@@ -665,7 +672,7 @@ async function handlePlaylistGeneration(event) {
     }
     
     // Track playlist generation start
-    posthog.capture('playlist_generation_started', {
+    captureEvent('playlist_generation_started', {
         class_name: formData.class_name,
         duration: formData.duration,
         music_preferences_length: formData.music_preferences.length,
@@ -692,7 +699,7 @@ async function handlePlaylistGeneration(event) {
             const generationTime = Date.now() - startTime;
             
             // Track successful generation
-            posthog.capture('playlist_generation_success', {
+            captureEvent('playlist_generation_success', {
                 class_name: formData.class_name,
                 duration: formData.duration,
                 generation_time_ms: generationTime,
@@ -710,7 +717,7 @@ async function handlePlaylistGeneration(event) {
 
         } else {
             // Track generation failure
-            posthog.capture('playlist_generation_error', {
+            captureEvent('playlist_generation_error', {
                 error_type: 'api_error',
                 error_message: data.error,
                 class_name: formData.class_name,
@@ -724,7 +731,7 @@ async function handlePlaylistGeneration(event) {
         console.error('Error generating playlist:', error);
         
         // Track network error
-        posthog.capture('playlist_generation_error', {
+        captureEvent('playlist_generation_error', {
             error_type: 'network_error',
             error_message: error.message,
             class_name: formData.class_name,
