@@ -142,6 +142,9 @@
                 ledgerUrl: 'https://fairydust-ledger-production.up.railway.app',
                 debug: true
             });
+            
+            // Make fairydust instance globally accessible
+            window.fairydust = fairydust;
 
             // Create account widgets for both desktop and mobile
             const accountComponentDesktop = fairydust.createAccountComponent('#fairydust-account-desktop', {

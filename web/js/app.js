@@ -152,18 +152,29 @@ window.handleAddCustomClass = function() {
         return;
     }
     
-    // Try to find a connected user (this is a simplified check)
-    const accountDesktop = document.querySelector('#fairydust-account-desktop');
-    const accountMobile = document.querySelector('#fairydust-account-mobile');
+    // Check if the global fairydust instance exists and user is authenticated
+    let isConnected = false;
     
-    // Check if user appears to be connected (look for user info in the DOM)
-    const isConnected = (accountDesktop && accountDesktop.textContent.includes('DUST')) || 
-                       (accountMobile && accountMobile.textContent.includes('DUST'));
+    // Try to access the fairydust instance that was created in the HTML script
+    // Look for it in the window scope or check the authentication status
+    if (window.fairydust && window.fairydust.getAPI && window.fairydust.getAPI().isAuthenticated) {
+        isConnected = window.fairydust.getAPI().isAuthenticated();
+    } else {
+        // Fallback: check if we can find authentication indicators in the DOM
+        const accountDesktop = document.querySelector('#fairydust-account-desktop');
+        const accountMobile = document.querySelector('#fairydust-account-mobile');
+        
+        // Look for user info or balance indicators
+        isConnected = (accountDesktop && (accountDesktop.textContent.includes('DUST') || accountDesktop.textContent.includes('@'))) || 
+                     (accountMobile && (accountMobile.textContent.includes('DUST') || accountMobile.textContent.includes('@')));
+    }
     
     if (!isConnected) {
         showSuccessMessage('🔐 Please connect with fairydust (top right) to add custom class types. Custom classes are tied to your account.', true);
         
         // Pulse the account component to draw attention
+        const accountDesktop = document.querySelector('#fairydust-account-desktop');
+        const accountMobile = document.querySelector('#fairydust-account-mobile');
         [accountDesktop, accountMobile].forEach(component => {
             if (component) {
                 component.style.animation = 'pulse 1s ease-in-out 3';
