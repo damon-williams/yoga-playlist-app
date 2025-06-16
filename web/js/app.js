@@ -560,19 +560,23 @@ function populateClassSelect(classes) {
 async function handlePlaylistGeneration(event) {
     event.preventDefault();
     
+    // Get fresh reference to the class type input (in case DOM was rebuilt)
+    const classTypeInput = document.getElementById('class-type');
+    const selectedClassName = classTypeInput ? classTypeInput.value : '';
+    
     // Get the selected class card's description
-    const selectedCard = document.querySelector('.class-card[data-class-name="' + classTypeSelect.value + '"]');
+    const selectedCard = document.querySelector('.class-card[data-class-name="' + selectedClassName + '"]');
     const classDescription = selectedCard ? selectedCard.getAttribute('data-description') : '';
 
     const formData = {
-        class_name: classTypeSelect.value,
+        class_name: selectedClassName,
         class_description: classDescription,
         music_preferences: musicPreferences.value,
         duration: parseInt(durationSlider.value)
     };
 
     // Validate form
-    console.log('🔍 Form validation - classTypeSelect.value:', classTypeSelect.value);
+    console.log('🔍 Form validation - classTypeInput.value:', selectedClassName);
     console.log('🔍 Form validation - formData.class_name:', formData.class_name);
     
     if (!formData.class_name) {
