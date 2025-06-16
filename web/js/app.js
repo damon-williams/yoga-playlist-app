@@ -68,7 +68,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1500); // Increased delay to ensure page is fully loaded
     } else if (authCode && !pendingPlaylist) {
         console.warn('⚠️ Auth code found but no pending playlist data');
-        showSuccessMessage('⚠️ Spotify authorization received but no playlist data found. If you just completed Spotify authorization, <button onclick="triggerManualPlaylistCreation()" style="background: #1db954; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Click here to retry</button>', true);
+        // Check if we have the data in URL params (for cross-domain scenarios)
+        const urlParams = new URLSearchParams(window.location.search);
+        const state = urlParams.get('state');
+        
+        if (state) {
+            try {
+                // Decode state parameter if present
+                const stateData = JSON.parse(decodeURIComponent(state));
+                console.log('📦 Found state data in URL:', stateData);
+                
+                if (stateData.playlistName && stateData.trackIds) {
+                    console.log('🔄 Using state data to create playlist');
+                    createPlaylistWithAuthCodeForReturn(stateData.playlistName, stateData.trackIds, authCode);
+                    return;
+                }
+            } catch (e) {
+                console.error('Failed to parse state parameter:', e);
+            }
+        }
+        
+        showSuccessMessage('⚠️ Spotify authorization received. To complete playlist creation:<br>1. Go back to where you generated the playlist<br>2. Click "Create Spotify Playlist" again<br><br>Or <button onclick="triggerManualPlaylistCreation()" style="background: #1db954; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Enter playlist details manually</button>', true);
     } else if (!authCode && pendingPlaylist) {
         console.log('ℹ️ Pending playlist found but no auth code - user may have navigated back');
         // Clean up old pending data after 10 minutes
@@ -947,7 +967,19 @@ function proceedWithPlaylistCreation(authCode) {
         const trackIds = currentPlaylistData.spotify_integration.track_ids;
         createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode);
     } else {
-        showSuccessMessage('❌ No playlist data available. Please generate a playlist first, then export to Spotify.', true);
+        // No current playlist data - offer to create a simple playlist
+        const createSimple = confirm('No playlist data found. Would you like to create a simple test playlist with a few popular yoga tracks?');
+        if (createSimple) {
+            // Use some default popular yoga/meditation tracks
+            const defaultTracks = [
+                'spotify:track:3ZffCQKLFLUvYM59XKLbVm', // Breathing meditation track
+                'spotify:track:4J8pGGPMAUHJqpAjT3qsmg', // Peaceful yoga track
+                'spotify:track:2RJf4nqh6HXNM0S2PCPeOl'  // Relaxation track
+            ];
+            createPlaylistWithAuthCodeForReturn(playlistName, defaultTracks, authCode);
+        } else {
+            showSuccessMessage('❌ Please generate a playlist first, then export to Spotify.', true);
+        }
     }
 }
 
