@@ -115,18 +115,32 @@ window.selectClassCard = function(card) {
     
     const musicPreferences = document.getElementById('music-preferences');
     if (musicSuggestions[className]) {
+        // Always update the value when a new class is selected
+        musicPreferences.value = musicSuggestions[className];
         musicPreferences.placeholder = musicSuggestions[className];
-        // Optionally pre-fill if empty
-        if (!musicPreferences.value) {
-            musicPreferences.value = musicSuggestions[className];
-        }
+    } else {
+        // Clear if no suggestion available
+        musicPreferences.value = '';
+        musicPreferences.placeholder = 'Optional - provide some direction to the AI...';
     }
 };
 
 // Handle add custom class
 window.handleAddCustomClass = function() {
     // Check if user is logged in with fairydust
-    // For now, just show the interface
+    const fairydust = window.fairydust || window.Fairydust?.instance;
+    
+    if (!fairydust || !fairydust.isConnected || !fairydust.isConnected()) {
+        showSuccessMessage('🔐 Please connect with fairydust (top right) to add custom class types', true);
+        // Highlight the account component
+        const accountComponent = document.querySelector('#fairydust-account-desktop, #fairydust-account-mobile');
+        if (accountComponent) {
+            accountComponent.style.animation = 'pulse 1s ease-in-out 3';
+        }
+        return;
+    }
+    
+    // User is logged in, show the interface
     showAddNewClassInterface();
 };
 
