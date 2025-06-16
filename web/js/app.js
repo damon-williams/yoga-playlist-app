@@ -290,6 +290,13 @@ async function saveNewClass() {
     const startTime = Date.now();
     
     try {
+        // Get user ID for custom class
+        const userId = getFairydustUserId();
+        if (!userId) {
+            showSuccessMessage('❌ User authentication required to create custom classes.', true);
+            return;
+        }
+        
         const response = await fetch(`${API_BASE_URL}/classes`, {
             method: 'POST',
             headers: {
@@ -297,7 +304,9 @@ async function saveNewClass() {
             },
             body: JSON.stringify({
                 name: name,
-                description: description
+                description: description,
+                user_id: userId,
+                is_public: false  // Custom classes are private by default
             })
         });
         
@@ -405,24 +414,66 @@ function updateStatus(elementId, text, statusClass) {
 
 async function loadYogaClasses() {
     try {
-        const response = await fetch(`${API_BASE_URL}/classes`);
+        // Get fairydust user ID if available
+        const userId = getFairydustUserId();
+        const url = userId ? `${API_BASE_URL}/classes?user_id=${encodeURIComponent(userId)}` : `${API_BASE_URL}/classes`;
+        
+        console.log('🔍 Loading classes for user:', userId || 'anonymous');
+        
+        const response = await fetch(url);
         const data = await response.json();
         
         if (data.success) {
             populateClassSelect(data.classes);
         } else {
             console.error('Failed to load classes:', data.error);
-            classTypeSelect.innerHTML = '<option value="">Error loading classes</option>';
+            // Show error in the loading area
+            const loadingDiv = document.getElementById('class-type-loading');
+            if (loadingDiv) {
+                loadingDiv.textContent = 'Error loading classes';
+                loadingDiv.style.color = '#d32f2f';
+            }
         }
     } catch (error) {
         console.error('Error loading classes:', error);
-        classTypeSelect.innerHTML = '<option value="">Connection error</option>';
+        const loadingDiv = document.getElementById('class-type-loading');
+        if (loadingDiv) {
+            loadingDiv.textContent = 'Connection error';
+            loadingDiv.style.color = '#d32f2f';
+        }
     }
+}
+
+// Helper function to get fairydust user ID
+function getFairydustUserId() {
+    // Try to extract user ID from fairydust account components
+    const accountDesktop = document.querySelector('#fairydust-account-desktop');
+    const accountMobile = document.querySelector('#fairydust-account-mobile');
+    
+    // Look for user info in the DOM (this is a simplified approach)
+    // In a real implementation, you'd use the fairydust SDK's user object
+    const accountElement = accountDesktop || accountMobile;
+    if (accountElement && accountElement.textContent.includes('DUST')) {
+        // For now, we'll use a simplified user ID extraction
+        // In production, you'd get this from the fairydust SDK properly
+        const textContent = accountElement.textContent;
+        // Try to extract some form of user identifier
+        // This is a placeholder - you'd need the actual fairydust user ID
+        return 'fairydust_user_' + Date.now(); // Temporary ID for testing
+    }
+    
+    return null;
 }
 
 function populateClassSelect(classes) {
     // Get the form group container
     const formGroup = classTypeSelect.closest('.form-group');
+    
+    // Separate public and custom classes
+    const publicClasses = classes.filter(c => !c.is_custom);
+    const customClasses = classes.filter(c => c.is_custom);
+    
+    console.log('📋 Showing classes - Public:', publicClasses.length, 'Custom:', customClasses.length);
     
     // Replace select with card grid
     formGroup.innerHTML = `
@@ -433,7 +484,7 @@ function populateClassSelect(classes) {
             gap: 12px;
             margin-top: 10px;
         ">
-            ${classes.slice(0, 8).map(yogaClass => `
+            ${publicClasses.map(yogaClass => `
                 <div 
                     class="class-card" 
                     data-class-name="${yogaClass.name}"
@@ -454,6 +505,32 @@ function populateClassSelect(classes) {
                     onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.transform='translateY(0)'"
                 >
                     ${yogaClass.name}
+                </div>
+            `).join('')}
+            
+            ${customClasses.map(yogaClass => `
+                <div 
+                    class="class-card custom-class" 
+                    data-class-name="${yogaClass.name}"
+                    data-description="${yogaClass.description}"
+                    onclick="selectClassCard(this)"
+                    style="
+                        padding: 20px 15px;
+                        background: rgba(103, 58, 183, 0.15);
+                        border: 2px solid rgba(103, 58, 183, 0.3);
+                        border-radius: 12px;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        font-weight: 500;
+                        backdrop-filter: blur(10px);
+                        position: relative;
+                    "
+                    onmouseover="this.style.background='rgba(103, 58, 183, 0.25)'; this.style.transform='translateY(-2px)'"
+                    onmouseout="this.style.background='rgba(103, 58, 183, 0.15)'; this.style.transform='translateY(0)'"
+                >
+                    ${yogaClass.name}
+                    <div style="position: absolute; top: 5px; right: 5px; font-size: 0.7rem; opacity: 0.8;">✨</div>
                 </div>
             `).join('')}
             

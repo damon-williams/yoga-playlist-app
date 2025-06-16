@@ -12,17 +12,36 @@ class handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
+            # Get user_id from query parameters
+            from urllib.parse import urlparse, parse_qs
+            parsed_url = urlparse(self.path)
+            query_params = parse_qs(parsed_url.query)
+            user_id = query_params.get('user_id', [None])[0]
+            
+            print(f"[DEBUG] Fetching classes for user_id: {user_id}")
+            
             # Get real data from Supabase
             supabase = self._get_supabase_client()
-            result = supabase.table("yoga_class_types").select("name, description").execute()
+            
+            # Build query: public classes OR user's private classes
+            if user_id:
+                # Get public classes AND user's private classes
+                result = supabase.table("yoga_class_types").select("name, description, user_id, is_public").or_(f"is_public.eq.true,user_id.eq.{user_id}").order("is_public", desc=True).order("created_at", desc=False).execute()
+            else:
+                # Only get public classes if no user_id provided
+                result = supabase.table("yoga_class_types").select("name, description, user_id, is_public").eq("is_public", True).order("created_at", desc=False).execute()
             
             classes = []
             if result.data:
                 for row in result.data:
                     classes.append({
                         "name": row["name"],
-                        "description": row["description"]
+                        "description": row["description"],
+                        "is_custom": not row.get("is_public", False),
+                        "user_id": row.get("user_id")
                     })
+            
+            print(f"[DEBUG] Found {len(classes)} classes")
             
             response = {
                 "success": True,
@@ -78,6 +97,11 @@ class handler(BaseHTTPRequestHandler):
             self._send_error("Missing required fields: name and description", 400)
             return
         
+        # Get user_id - for custom classes, this should be provided
+        user_id = data.get('user_id')
+        
+        print(f"[DEBUG] Creating class '{data['name']}' for user_id: {user_id}")
+        
         try:
             # Add to real Supabase database
             supabase = self._get_supabase_client()
@@ -87,7 +111,9 @@ class handler(BaseHTTPRequestHandler):
                 "description": data['description'],
                 "typical_duration": data.get('duration'),
                 "energy_level": data.get('energy_level'),
-                "music_style_notes": data.get('music_style_notes')
+                "music_style_notes": data.get('music_style_notes'),
+                "user_id": user_id,
+                "is_public": data.get('is_public', False)  # Default to private
             }
             
             result = supabase.table("yoga_class_types").insert(insert_data).execute()
