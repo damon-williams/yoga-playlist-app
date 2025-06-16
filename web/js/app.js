@@ -450,20 +450,27 @@ async function loadYogaClasses() {
 
 // Helper function to get fairydust user ID
 function getFairydustUserId() {
-    // Try to extract user ID from fairydust account components
-    const accountDesktop = document.querySelector('#fairydust-account-desktop');
-    const accountMobile = document.querySelector('#fairydust-account-mobile');
+    // Try to get user ID from the fairydust SDK
+    if (window.fairydust && window.fairydust.getAPI) {
+        try {
+            const api = window.fairydust.getAPI();
+            if (api.isAuthenticated && api.isAuthenticated()) {
+                // Try to get user info from the API
+                const user = api.getCurrentUser ? api.getCurrentUser() : null;
+                if (user && user.id) {
+                    return user.id;
+                }
+            }
+        } catch (error) {
+            console.log('Could not get user from fairydust API:', error);
+        }
+    }
     
-    // Look for user info in the DOM (this is a simplified approach)
-    // In a real implementation, you'd use the fairydust SDK's user object
-    const accountElement = accountDesktop || accountMobile;
-    if (accountElement && accountElement.textContent.includes('DUST')) {
-        // For now, we'll use a simplified user ID extraction
-        // In production, you'd get this from the fairydust SDK properly
-        const textContent = accountElement.textContent;
-        // Try to extract some form of user identifier
-        // This is a placeholder - you'd need the actual fairydust user ID
-        return 'fairydust_user_' + Date.now(); // Temporary ID for testing
+    // Fallback: try to extract user ID from the global fairydust events/callbacks
+    // The user data is logged in console as: {id: '9b061774-85a0-4d5a-9a6a-bb81dc6ac61b', ...}
+    // We could store this in a global variable when the onConnect callback fires
+    if (window.fairydustUser && window.fairydustUser.id) {
+        return window.fairydustUser.id;
     }
     
     return null;
