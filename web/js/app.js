@@ -747,20 +747,31 @@ function showSuccessMessage(message, isError = false) {
         return;
     }
     
-    successContent.innerHTML = message;
+    // Add dismiss button to message
+    const messageWithDismiss = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+            <div style="flex: 1;">${message}</div>
+            <button onclick="dismissSuccessMessage()" style="background: rgba(0,0,0,0.1); border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; font-size: 14px; color: inherit; flex-shrink: 0;" title="Dismiss message">✕</button>
+        </div>
+    `;
+    
+    successContent.innerHTML = messageWithDismiss;
     successArea.className = isError ? 'success-area error' : 'success-area';
     successArea.style.display = 'block';
     
     // Scroll to top to ensure message is visible
     window.scrollTo(0, 0);
     
-    // Auto-hide after 10 seconds unless it contains a link
-    if (!message.includes('<a ')) {
-        setTimeout(() => {
-            successArea.style.display = 'none';
-        }, 10000);
-    }
+    // Remove auto-hide timeout - let user dismiss manually
 }
+
+// Function to dismiss success message
+window.dismissSuccessMessage = function() {
+    const successArea = document.getElementById('success-area');
+    if (successArea) {
+        successArea.style.display = 'none';
+    }
+};
 
 async function createPlaylistWithAuthCode(playlistName, trackIds, authCode) {
     const currentExportBtn = document.getElementById('export-btn');
