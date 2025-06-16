@@ -229,35 +229,20 @@ function showAddNewClassInterface() {
     // Replace the class type form group with custom class input fields
     classTypeFormGroup.innerHTML = `
         <label>Add Custom Class Type</label>
-        <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2);">
-            <div style="margin-bottom: 15px;">
-                <label for="new-class-name" style="color: #333; font-size: 0.9rem; margin-bottom: 5px;">Class Name</label>
-                <input type="text" id="new-class-name" placeholder="e.g., Hot Power Flow" required style="margin-bottom: 10px;">
+        <div class="custom-class-form-container">
+            <div class="custom-class-form-group">
+                <label for="new-class-name" class="custom-class-form-label">Class Name</label>
+                <input type="text" id="new-class-name" class="custom-class-form-input" placeholder="e.g., Hot Power Flow" required>
             </div>
             
-            <div style="margin-bottom: 20px;">
-                <label for="new-class-description" style="color: #333; font-size: 0.9rem; margin-bottom: 5px;">Class Description</label>
-                <textarea id="new-class-description" placeholder="Describe the style, intensity, and focus of this class..." required style="min-height: 80px;"></textarea>
+            <div class="custom-class-form-group">
+                <label for="new-class-description" class="custom-class-form-label">Class Description</label>
+                <textarea id="new-class-description" class="custom-class-form-textarea" placeholder="Describe the style, intensity, and focus of this class..." required></textarea>
             </div>
             
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button type="button" id="save-new-class" style="
-                    background: rgba(103, 58, 183, 0.8); 
-                    color: white; 
-                    border: none; 
-                    padding: 12px 20px; 
-                    border-radius: 8px; 
-                    cursor: pointer;
-                    font-weight: 500;
-                ">💾 Save & Use This Class</button>
-                <button type="button" id="cancel-new-class" style="
-                    background: transparent; 
-                    color: #666; 
-                    border: 1px solid #ccc; 
-                    padding: 12px 20px; 
-                    border-radius: 8px; 
-                    cursor: pointer;
-                ">❌ Cancel</button>
+            <div class="custom-class-form-actions">
+                <button type="button" id="save-new-class" class="custom-class-save-btn">💾 Save & Use This Class</button>
+                <button type="button" id="cancel-new-class" class="custom-class-cancel-btn">❌ Cancel</button>
             </div>
         </div>
         <input type="hidden" id="class-type" required>
@@ -1015,95 +1000,40 @@ function showPlaylistReadyScreen(data, className) {
     }
     
     outputContent.innerHTML = `
-        <div class="playlist-ready-celebration" style="
-            text-align: center; 
-            padding: 40px 20px; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            color: white;
-            animation: celebrationPulse 0.6s ease-out;
-        ">
+        <div class="playlist-ready-celebration">
             <div 
+                class="celebration-gift-icon"
                 onclick="revealPlaylist()" 
-                style="
-                    font-size: 4rem; 
-                    margin-bottom: 20px; 
-                    animation: giftBoxFloat 2s ease-in-out infinite;
-                    cursor: pointer;
-                    transition: transform 0.2s ease;
-                    display: inline-block;
-                "
-                onmouseover="this.style.transform='scale(1.1)'"
-                onmouseout="this.style.transform='scale(1)'"
                 title="Click to unwrap your playlist!"
             >
                 🎁
             </div>
             
-            <h2 style="margin: 0 0 15px 0; font-size: 2rem; font-weight: bold;">
+            <h2 class="celebration-title">
                 Playlist Ready!
             </h2>
             
-            <p style="margin: 0 0 25px 0; font-size: 1.1rem; opacity: 0.9;">
+            <p class="celebration-subtitle">
                 Your personalized <strong>${className}</strong> playlist is complete<br>
                 ${trackCount > 0 ? `with ${trackCount} perfect tracks` : 'with curated tracks'}
             </p>
             
-            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <div class="celebration-actions">
                 <button 
                     onclick="revealPlaylist()" 
-                    style="
-                        background: rgba(255,255,255,0.2); 
-                        border: 2px solid rgba(255,255,255,0.3);
-                        color: white; 
-                        padding: 15px 25px; 
-                        border-radius: 25px; 
-                        font-size: 1rem;
-                        font-weight: bold;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                        backdrop-filter: blur(10px);
-                    "
-                    onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='translateY(-2px)'"
-                    onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='translateY(0px)'"
+                    class="celebration-btn-primary"
                 >
                     ✨ Show My Playlist
                 </button>
                 
                 <button 
                     onclick="autoReveal()" 
-                    style="
-                        background: transparent; 
-                        border: 1px solid rgba(255,255,255,0.5);
-                        color: rgba(255,255,255,0.8); 
-                        padding: 15px 25px; 
-                        border-radius: 25px; 
-                        font-size: 0.9rem;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    "
-                    onmouseover="this.style.background='rgba(255,255,255,0.1)'"
-                    onmouseout="this.style.background='transparent'"
+                    class="celebration-btn-secondary"
                 >
                     🔮 Surprise Me (auto-reveal in 3s)
                 </button>
             </div>
         </div>
-        
-        <style>
-            @keyframes celebrationPulse {
-                0% { transform: scale(0.8); opacity: 0; }
-                50% { transform: scale(1.05); }
-                100% { transform: scale(1); opacity: 1; }
-            }
-            
-            @keyframes giftBoxFloat {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                25% { transform: translateY(-10px) rotate(-2deg); }
-                50% { transform: translateY(-5px) rotate(0deg); }
-                75% { transform: translateY(-15px) rotate(2deg); }
-            }
-        </style>
     `;
 }
 
@@ -1202,9 +1132,9 @@ function showSuccessMessage(message, isError = false) {
     
     // Add dismiss button to message
     const messageWithDismiss = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-            <div style="flex: 1;">${message}</div>
-            <button onclick="dismissSuccessMessage()" style="background: rgba(0,0,0,0.1); border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; font-size: 14px; color: inherit; flex-shrink: 0;" title="Dismiss message">✕</button>
+        <div class="success-message-container">
+            <div class="success-message-content">${message}</div>
+            <button onclick="dismissSuccessMessage()" class="success-dismiss-btn" title="Dismiss message">✕</button>
         </div>
     `;
     
