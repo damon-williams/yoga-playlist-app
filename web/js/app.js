@@ -489,6 +489,10 @@ function setGeneratingState(isGenerating) {
 async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode) {
     try {
         console.log('🎵 Starting playlist creation for return from Spotify...');
+        console.log('Playlist name:', playlistName);
+        console.log('Track IDs:', trackIds);
+        console.log('Auth code present:', !!authCode);
+        
         showSuccessMessage('🔄 Creating your Spotify playlist...');
         
         const requestBody = {
@@ -511,6 +515,7 @@ async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authC
             body: JSON.stringify(requestBody)
         });
         
+        console.log('Response status:', response.status);
         const data = await response.json();
         console.log('📡 Spotify API response:', data);
         
@@ -531,12 +536,20 @@ async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authC
                 `;
             }
         } else {
-            console.error('❌ Playlist creation failed:', data.error);
-            showSuccessMessage(`❌ Error: ${data.error}`, true);
+            console.error('❌ Playlist creation failed:', data.error || data.message || 'Unknown error');
+            showSuccessMessage(`❌ Error: ${data.error || data.message || 'Failed to create playlist'}`, true);
+            
+            // If auth code expired, offer to re-authenticate
+            if (data.error && data.error.includes('invalid_grant')) {
+                console.log('Auth code may have expired, clearing stored code');
+                localStorage.removeItem('spotify_auth_code');
+                showSuccessMessage(`❌ Authorization expired. Please try "Create Spotify Playlist" again to re-authenticate.`, true);
+            }
         }
         
     } catch (error) {
         console.error('❌ Network error during playlist creation:', error);
+        console.error('Error details:', error.stack);
         showSuccessMessage(`❌ Network error: ${error.message}`, true);
     }
 }
