@@ -491,6 +491,10 @@ function getFairydustUserId() {
 }
 
 function populateClassSelect(classes) {
+    // Save the currently selected class name before rebuilding
+    const currentSelection = document.getElementById('class-type')?.value;
+    console.log('🔄 Preserving class selection:', currentSelection);
+    
     // Get the form group container - try multiple approaches since form structure may have changed
     let formGroup = null;
     
@@ -607,6 +611,19 @@ function populateClassSelect(classes) {
     
     // Re-assign the global reference to the hidden input
     window.classTypeSelect = document.getElementById('class-type');
+    
+    // Restore the previous selection if it exists
+    if (currentSelection) {
+        console.log('🔄 Restoring class selection:', currentSelection);
+        const cardToSelect = document.querySelector(`[data-class-name="${currentSelection}"]`);
+        if (cardToSelect) {
+            // Use setTimeout to ensure DOM is fully rendered
+            setTimeout(() => {
+                selectClassCard(cardToSelect);
+                console.log('✅ Class selection restored');
+            }, 100);
+        }
+    }
 }
 
 async function handlePlaylistGeneration(event) {
