@@ -109,6 +109,8 @@ window.selectClassCard = function(card) {
     const hiddenInput = document.getElementById('class-type');
     if (hiddenInput) {
         hiddenInput.value = className;
+        // Trigger change event to notify fairydust button
+        hiddenInput.dispatchEvent(new Event('change'));
     }
     
     // Pre-populate music preferences based on class type
@@ -123,16 +125,19 @@ window.selectClassCard = function(card) {
         'Gentle': 'Soothing, slow tempo, relaxing'
     };
     
-    const musicPreferences = document.getElementById('music-preferences');
-    if (musicSuggestions[className]) {
+    const musicPreferencesElement = document.getElementById('music-preferences');
+    if (musicPreferencesElement && musicSuggestions[className]) {
         // Always update the value when a new class is selected
-        musicPreferences.value = musicSuggestions[className];
-        musicPreferences.placeholder = musicSuggestions[className];
-    } else {
+        musicPreferencesElement.value = musicSuggestions[className];
+        musicPreferencesElement.placeholder = musicSuggestions[className];
+        console.log('Updated music preferences for', className, ':', musicSuggestions[className]);
+    } else if (musicPreferencesElement) {
         // Clear if no suggestion available
-        musicPreferences.value = '';
-        musicPreferences.placeholder = 'Optional - provide some direction to the AI...';
+        musicPreferencesElement.value = '';
+        musicPreferencesElement.placeholder = 'Optional - provide some direction to the AI...';
     }
+    
+    // Button update is handled by the change event now
 };
 
 // Handle add custom class

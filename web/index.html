@@ -48,9 +48,12 @@
                 <form id="playlist-form">
                     <div class="form-group">
                         <label for="class-type">Class Type</label>
-                        <select id="class-type" required>
+                        <select id="class-type" required style="display: none;">
                             <option value="">Loading classes...</option>
                         </select>
+                        <div id="class-type-loading" style="text-align: center; padding: 20px; color: #666;">
+                            Loading class types...
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -229,6 +232,13 @@
 
             // Update button when form changes
             document.getElementById('class-type').addEventListener('change', updateFairydustButton);
+            
+            // Also check for updates when cards are clicked (since we use a hidden input now)
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('class-card') && !e.target.classList.contains('add-custom-card')) {
+                    setTimeout(updateFairydustButton, 100); // Small delay to ensure hidden input is updated
+                }
+            });
             
             // Listen for authentication success from button component
             document.addEventListener('fairydust:success', async (event) => {
