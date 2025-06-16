@@ -107,8 +107,13 @@ window.selectClassCard = function(card) {
     const className = card.getAttribute('data-class-name');
     const description = card.getAttribute('data-description');
     const hiddenInput = document.getElementById('class-type');
+    console.log('🎯 Card clicked - className:', className);
+    console.log('🎯 Card clicked - description:', description);
+    console.log('🎯 Card clicked - hiddenInput found:', !!hiddenInput);
+    
     if (hiddenInput) {
         hiddenInput.value = className;
+        console.log('🎯 Card clicked - hiddenInput.value set to:', hiddenInput.value);
         // Trigger change event to notify fairydust button
         hiddenInput.dispatchEvent(new Event('change'));
     }
@@ -567,6 +572,9 @@ async function handlePlaylistGeneration(event) {
     };
 
     // Validate form
+    console.log('🔍 Form validation - classTypeSelect.value:', classTypeSelect.value);
+    console.log('🔍 Form validation - formData.class_name:', formData.class_name);
+    
     if (!formData.class_name) {
         // Track validation error
         posthog.capture('playlist_generation_error', {
