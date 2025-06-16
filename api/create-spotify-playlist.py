@@ -108,7 +108,7 @@ class handler(BaseHTTPRequestHandler):
             # Create playlist with auth code
             client_id = os.getenv("SPOTIFY_CLIENT_ID")
             client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
-            redirect_uri = os.getenv("SPOTIFY_REDIRECT_URI", "https://yoga-playlist-app.vercel.app/spotify-callback")
+            redirect_uri = os.getenv("SPOTIFY_REDIRECT_URI", "https://yoga-playlist-app.vercel.app/")
             
             sp_oauth = SpotifyOAuth(
                 client_id=client_id,

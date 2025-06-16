@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const authCode = getSpotifyAuthCodeFromURL();
     const pendingPlaylist = localStorage.getItem('pendingPlaylist');
     
+    console.log('🔍 Initial check - Auth code:', !!authCode, 'Pending playlist:', !!pendingPlaylist);
+    
     if (authCode && pendingPlaylist) {
         console.log('🔄 Spotify auth code detected, processing playlist creation...');
         // User has returned from Spotify - auto-create the playlist
@@ -64,6 +66,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 showSuccessMessage('❌ Error processing playlist data. Please try again.', true);
             }
         }, 1500); // Increased delay to ensure page is fully loaded
+    } else if (authCode && !pendingPlaylist) {
+        console.warn('⚠️ Auth code found but no pending playlist data');
+        showSuccessMessage('⚠️ Spotify authorization received but no playlist data found. If you just completed Spotify authorization, <button onclick="triggerManualPlaylistCreation()" style="background: #1db954; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Click here to retry</button>', true);
+    } else if (!authCode && pendingPlaylist) {
+        console.log('ℹ️ Pending playlist found but no auth code - user may have navigated back');
+        // Clean up old pending data after 10 minutes
+        try {
+            const data = JSON.parse(pendingPlaylist);
+            if (data.timestamp && (Date.now() - data.timestamp) > 10 * 60 * 1000) {
+                console.log('🧹 Cleaning up old pending playlist data');
+                localStorage.removeItem('pendingPlaylist');
+            }
+        } catch (e) {
+            console.log('🧹 Cleaning up invalid pending playlist data');
+            localStorage.removeItem('pendingPlaylist');
+        }
     }
 });
 
@@ -624,10 +642,13 @@ async function initiateSpotifyAuth(playlistName, trackIds) {
         currentExportBtn.textContent = '🔄 Getting Spotify Authorization...';
         
         // Store playlist data in localStorage for when user returns
-        localStorage.setItem('pendingPlaylist', JSON.stringify({
+        const pendingData = {
             playlistName: playlistName,
-            trackIds: trackIds
-        }));
+            trackIds: trackIds,
+            timestamp: Date.now()
+        };
+        console.log('💾 Storing pending playlist data:', pendingData);
+        localStorage.setItem('pendingPlaylist', JSON.stringify(pendingData));
         
         // Get Spotify authorization URL
         const response = await fetch(`${API_BASE_URL}/create-spotify-playlist`, {
@@ -796,13 +817,28 @@ function getSpotifyAuthCodeFromURL() {
     // Check if there's an auth code in the URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const error = urlParams.get('error');
+    
+    console.log('🔍 Checking URL for Spotify auth code...');
+    console.log('Current URL:', window.location.href);
+    console.log('URL params:', urlParams.toString());
+    console.log('Auth code found:', code);
+    console.log('Error parameter:', error);
+    
+    if (error) {
+        console.error('❌ Spotify authorization error:', error);
+        showSuccessMessage(`❌ Spotify authorization failed: ${error}`, true);
+        return null;
+    }
     
     if (code) {
+        console.log('✅ Auth code found, cleaning up URL...');
         // Clean up the URL
         window.history.replaceState({}, document.title, window.location.pathname);
         return code;
     }
     
+    console.log('ℹ️ No auth code in URL');
     return null;
 }
 
@@ -836,6 +872,30 @@ function displayExportError(message) {
         ${message}
     `;
 }
+
+// Manual trigger for playlist creation when automatic flow fails
+window.triggerManualPlaylistCreation = function() {
+    console.log('🔧 Manual playlist creation triggered');
+    
+    // Check if we have a current playlist and auth code
+    const authCode = getSpotifyAuthCodeFromURL();
+    if (!authCode) {
+        showSuccessMessage('❌ No authorization code found. Please try the Spotify authorization again.', true);
+        return;
+    }
+    
+    // Prompt for playlist details
+    const playlistName = prompt('Enter playlist name:', 'My Yoga Playlist - ' + new Date().toISOString().split('T')[0]);
+    if (!playlistName) return;
+    
+    // Check if we have current playlist data
+    if (currentPlaylistData && currentPlaylistData.spotify_integration && currentPlaylistData.spotify_integration.track_ids) {
+        const trackIds = currentPlaylistData.spotify_integration.track_ids;
+        createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode);
+    } else {
+        showSuccessMessage('❌ No playlist data available. Please generate a playlist first, then export to Spotify.', true);
+    }
+};
 
 // Utility function for debugging
 window.debugAPI = async function() {
