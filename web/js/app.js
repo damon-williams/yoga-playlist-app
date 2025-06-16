@@ -88,7 +88,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        showSuccessMessage('⚠️ Spotify authorization received. To complete playlist creation:<br>1. Go back to where you generated the playlist<br>2. Click "Create Spotify Playlist" again<br><br>Or <button onclick="triggerManualPlaylistCreation()" style="background: #1db954; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Enter playlist details manually</button>', true);
+        // Check if we have currentPlaylistData (might be available if returning to same session)
+        if (currentPlaylistData && currentPlaylistData.spotify_integration && currentPlaylistData.spotify_integration.track_ids) {
+            console.log('📀 Found current playlist data in memory, attempting to create playlist...');
+            const trackIds = currentPlaylistData.spotify_integration.track_ids;
+            // Use a default name or extract from current data
+            const playlistName = currentPlaylistData.playlist_name || `Yoga Playlist - ${new Date().toISOString().split('T')[0]}`;
+            setTimeout(() => {
+                createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode);
+            }, 1500);
+        } else {
+            showSuccessMessage('⚠️ Spotify authorization received. To complete playlist creation:<br>1. Go back to where you generated the playlist<br>2. Click "Create Spotify Playlist" again<br><br>Or <button onclick="triggerManualPlaylistCreation()" style="background: #1db954; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Enter playlist details manually</button>', true);
+        }
     } else if (!authCode && pendingPlaylist) {
         console.log('ℹ️ Pending playlist found but no auth code - user may have navigated back');
         // Clean up old pending data after 10 minutes
@@ -883,8 +894,12 @@ function getSpotifyAuthCodeFromURL() {
         console.log('✅ Auth code found, storing and cleaning up URL...');
         // Store auth code in localStorage for potential reuse
         localStorage.setItem('spotify_auth_code', code);
-        // Clean up the URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // Don't clean URL immediately - let the page fully process first
+        // Clean up the URL after a short delay
+        setTimeout(() => {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            console.log('🧹 URL cleaned');
+        }, 2000);
         return code;
     }
     
