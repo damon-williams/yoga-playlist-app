@@ -372,16 +372,12 @@ async function handlePlaylistGeneration(event) {
                 ready_for_export: data.ready_for_export,
                 timestamp: new Date().toISOString()
             });
-                    
-            displayPlaylistResult(data);
+            
+            // Store the data for later reveal
             currentPlaylistData = data;
             
-            // Show export section if Spotify tracks were found
-            if (data.ready_for_export) {
-                showExportSection(formData.class_name);
-            }
-              // Show share section
-            showShareSection(); 
+            // Show celebration screen first!
+            showPlaylistReadyScreen(data, formData.class_name);
 
         } else {
             // Track generation failure
@@ -684,6 +680,135 @@ function showLoadingAnimation() {
             <div class="loading-subtext">Finding the perfect tracks on Spotify</div>
         </div>
     `;
+}
+
+// Show celebration screen before revealing playlist
+function showPlaylistReadyScreen(data, className) {
+    // Get track count for excitement
+    let trackCount = 0;
+    if (data.spotify_integration?.search_results?.found_count) {
+        trackCount = data.spotify_integration.search_results.found_count;
+    }
+    
+    outputContent.innerHTML = `
+        <div class="playlist-ready-celebration" style="
+            text-align: center; 
+            padding: 40px 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            animation: celebrationPulse 0.6s ease-out;
+        ">
+            <div style="font-size: 4rem; margin-bottom: 20px; animation: celebrationBounce 0.8s ease-out;">
+                🎉
+            </div>
+            
+            <h2 style="margin: 0 0 15px 0; font-size: 2rem; font-weight: bold;">
+                Playlist Ready!
+            </h2>
+            
+            <p style="margin: 0 0 25px 0; font-size: 1.1rem; opacity: 0.9;">
+                Your personalized <strong>${className}</strong> playlist is complete<br>
+                ${trackCount > 0 ? `with ${trackCount} perfect tracks` : 'with curated tracks'}
+            </p>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button 
+                    onclick="revealPlaylist()" 
+                    style="
+                        background: rgba(255,255,255,0.2); 
+                        border: 2px solid rgba(255,255,255,0.3);
+                        color: white; 
+                        padding: 15px 25px; 
+                        border-radius: 25px; 
+                        font-size: 1rem;
+                        font-weight: bold;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        backdrop-filter: blur(10px);
+                    "
+                    onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='translateY(-2px)'"
+                    onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='translateY(0px)'"
+                >
+                    ✨ Show My Playlist
+                </button>
+                
+                <button 
+                    onclick="autoReveal()" 
+                    style="
+                        background: transparent; 
+                        border: 1px solid rgba(255,255,255,0.5);
+                        color: rgba(255,255,255,0.8); 
+                        padding: 15px 25px; 
+                        border-radius: 25px; 
+                        font-size: 0.9rem;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                    "
+                    onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.background='transparent'"
+                >
+                    🔮 Surprise Me (auto-reveal in 3s)
+                </button>
+            </div>
+            
+            <div style="margin-top: 20px; font-size: 0.8rem; opacity: 0.7;">
+                Ready to bring some zen to your practice? 🧘‍♀️
+            </div>
+        </div>
+        
+        <style>
+            @keyframes celebrationPulse {
+                0% { transform: scale(0.8); opacity: 0; }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); opacity: 1; }
+            }
+            
+            @keyframes celebrationBounce {
+                0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+                40%, 43% { transform: translateY(-20px); }
+                70% { transform: translateY(-10px); }
+                90% { transform: translateY(-5px); }
+            }
+        </style>
+    `;
+}
+
+// Global functions for the celebration buttons
+window.revealPlaylist = function() {
+    if (currentPlaylistData) {
+        displayPlaylistResult(currentPlaylistData);
+        showExportAndShareSections();
+    }
+};
+
+window.autoReveal = function() {
+    // Add a little countdown excitement
+    const button = event.target;
+    let countdown = 3;
+    button.textContent = `🔮 Revealing in ${countdown}...`;
+    button.disabled = true;
+    
+    const timer = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+            button.textContent = `🔮 Revealing in ${countdown}...`;
+        } else {
+            clearInterval(timer);
+            revealPlaylist();
+        }
+    }, 1000);
+};
+
+function showExportAndShareSections() {
+    if (currentPlaylistData) {
+        // Show export section if Spotify tracks were found
+        if (currentPlaylistData.ready_for_export) {
+            showExportSection(currentPlaylistData.class_name || 'Yoga Playlist');
+        }
+        // Show share section
+        showShareSection();
+    }
 }
 
 // Show share section
