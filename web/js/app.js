@@ -699,8 +699,8 @@ function showPlaylistReadyScreen(data, className) {
             color: white;
             animation: celebrationPulse 0.6s ease-out;
         ">
-            <div style="font-size: 4rem; margin-bottom: 20px; animation: celebrationBounce 0.8s ease-out;">
-                🎉
+            <div style="font-size: 4rem; margin-bottom: 20px; animation: giftBoxFloat 2s ease-in-out infinite;">
+                🎁
             </div>
             
             <h2 style="margin: 0 0 15px 0; font-size: 2rem; font-weight: bold;">
@@ -751,10 +751,6 @@ function showPlaylistReadyScreen(data, className) {
                     🔮 Surprise Me (auto-reveal in 3s)
                 </button>
             </div>
-            
-            <div style="margin-top: 20px; font-size: 0.8rem; opacity: 0.7;">
-                Ready to bring some zen to your practice? 🧘‍♀️
-            </div>
         </div>
         
         <style>
@@ -764,11 +760,11 @@ function showPlaylistReadyScreen(data, className) {
                 100% { transform: scale(1); opacity: 1; }
             }
             
-            @keyframes celebrationBounce {
-                0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
-                40%, 43% { transform: translateY(-20px); }
-                70% { transform: translateY(-10px); }
-                90% { transform: translateY(-5px); }
+            @keyframes giftBoxFloat {
+                0%, 100% { transform: translateY(0px) rotate(0deg); }
+                25% { transform: translateY(-10px) rotate(-2deg); }
+                50% { transform: translateY(-5px) rotate(0deg); }
+                75% { transform: translateY(-15px) rotate(2deg); }
             }
         </style>
     `;
