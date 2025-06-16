@@ -195,10 +195,17 @@ function handleClassTypeChange() {
 }
 
 function showAddNewClassInterface() {
-    // Replace the card grid with input fields
-    const formGroup = document.querySelector('.form-group');
+    // Get the class type form group (first one)
+    const classTypeFormGroup = document.querySelector('.form-group');
     
-    formGroup.innerHTML = `
+    // Hide the music preferences form group
+    const musicPreferencesFormGroup = document.querySelector('#music-preferences').closest('.form-group');
+    if (musicPreferencesFormGroup) {
+        musicPreferencesFormGroup.style.display = 'none';
+    }
+    
+    // Replace the class type form group with custom class input fields
+    classTypeFormGroup.innerHTML = `
         <label>Add Custom Class Type</label>
         <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2);">
             <div style="margin-bottom: 15px;">
@@ -330,7 +337,7 @@ async function saveNewClass() {
             await loadYogaClasses();
             
             // Show success message
-            showSuccessMessage(`✅ Class "${name}" added successfully! You can now select it from the cards above.`, false);
+            showSuccessMessage(`✅ Class "${name}" added successfully! You can now select it from the class cards.`, false);
             
             // Auto-select the newly added class after cards load
             setTimeout(() => {
@@ -477,8 +484,28 @@ function getFairydustUserId() {
 }
 
 function populateClassSelect(classes) {
-    // Get the form group container
-    const formGroup = classTypeSelect.closest('.form-group');
+    // Get the form group container - try multiple approaches since form structure may have changed
+    let formGroup = null;
+    
+    if (classTypeSelect && classTypeSelect.closest) {
+        formGroup = classTypeSelect.closest('.form-group');
+    }
+    
+    // Fallback: get the first form group if the above failed
+    if (!formGroup) {
+        formGroup = document.querySelector('.form-group');
+    }
+    
+    if (!formGroup) {
+        console.error('Could not find form group for class selection');
+        return;
+    }
+    
+    // Show music preferences form group if it was hidden
+    const musicPreferencesFormGroup = document.querySelector('#music-preferences')?.closest('.form-group');
+    if (musicPreferencesFormGroup) {
+        musicPreferencesFormGroup.style.display = 'block';
+    }
     
     // Separate public and custom classes
     const publicClasses = classes.filter(c => !c.is_custom);

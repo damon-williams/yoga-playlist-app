@@ -153,6 +153,10 @@
                     // Store user data globally for access in other functions
                     window.fairydustUser = user;
                     updateFairydustButton();
+                    // Reload classes to include user's custom classes
+                    if (typeof loadYogaClasses === 'function') {
+                        loadYogaClasses();
+                    }
                 },
                 onDisconnect: () => {
                     console.log('fairydust user disconnected');
@@ -171,6 +175,10 @@
                     // Store user data globally for access in other functions
                     window.fairydustUser = user;
                     updateFairydustButton();
+                    // Reload classes to include user's custom classes
+                    if (typeof loadYogaClasses === 'function') {
+                        loadYogaClasses();
+                    }
                 },
                 onDisconnect: () => {
                     console.log('fairydust user disconnected');
