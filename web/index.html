@@ -210,8 +210,19 @@
                         }
                     }
                 } catch (error) {
-                    console.log('Account component refresh error (expected during auth flow):', error);
+                    // Handle auth token expiration
+                    if (error.message && error.message.includes('401')) {
+                        console.log('fairydust auth token expired - user needs to reconnect');
+                        // Clear stored user data
+                        window.fairydustUser = null;
+                        // Update UI to show disconnected state
+                        updateFairydustButton();
+                        // Don't keep trying to refresh
+                        return false;
+                    }
+                    console.log('Account component refresh error:', error);
                 }
+                return true;
             }
 
             // Create payment button
@@ -239,11 +250,36 @@
                     onError: (error) => {
                         console.error('fairydust payment failed:', error);
                         console.log('Error details:', typeof error, error);
+                        
                         // More user-friendly error handling
-                        if (error.includes && error.includes('401')) {
-                            alert('Authentication required. Please try again.');
+                        let errorMessage = '';
+                        
+                        if (error && (error.includes && error.includes('401')) || 
+                            (error.message && error.message.includes('401'))) {
+                            errorMessage = '🔐 Your session has expired. Please reconnect with fairydust to continue.';
+                            // Clear stored user data
+                            window.fairydustUser = null;
+                            hasRefreshedAfterAuth = false;
+                            // Show error with better guidance
+                            showSuccessMessage(errorMessage, true);
+                            
+                            // Pulse the account component to draw attention
+                            const accountDesktop = document.querySelector('#fairydust-account-desktop');
+                            const accountMobile = document.querySelector('#fairydust-account-mobile');
+                            [accountDesktop, accountMobile].forEach(component => {
+                                if (component) {
+                                    component.style.animation = 'pulse 1s ease-in-out 3';
+                                    setTimeout(() => {
+                                        component.style.animation = '';
+                                    }, 3000);
+                                }
+                            });
+                        } else if (error && error.includes && error.includes('insufficient')) {
+                            errorMessage = '💸 Insufficient DUST balance. Please add more DUST to continue.';
+                            showSuccessMessage(errorMessage, true);
                         } else {
-                            alert('Payment failed: ' + error);
+                            errorMessage = `❌ Payment failed: ${error}`;
+                            showSuccessMessage(errorMessage, true);
                         }
                     }
                 });
@@ -272,12 +308,24 @@
             // Refresh account components after a short delay when authentication might have happened
             // This handles the case where button authentication succeeds but doesn't notify account component
             const authCheckInterval = setInterval(async () => {
-                if (fairydust.getAPI().isAuthenticated() && !hasRefreshedAfterAuth) {
-                    console.log('User is authenticated, attempting to refresh account component once');
-                    hasRefreshedAfterAuth = true;
-                    await refreshAllAccountComponents();
-                    
-                    // Clear the interval after the first successful refresh attempt
+                try {
+                    if (fairydust.getAPI().isAuthenticated() && !hasRefreshedAfterAuth) {
+                        console.log('User is authenticated, attempting to refresh account component once');
+                        hasRefreshedAfterAuth = true;
+                        const success = await refreshAllAccountComponents();
+                        
+                        // If refresh failed due to auth expiration, stop checking
+                        if (!success) {
+                            clearInterval(authCheckInterval);
+                            return;
+                        }
+                        
+                        // Clear the interval after the first successful refresh attempt
+                        clearInterval(authCheckInterval);
+                    }
+                } catch (error) {
+                    console.log('Auth check interval error:', error);
+                    // Stop checking if there's an error
                     clearInterval(authCheckInterval);
                 }
             }, 2000); // Check every 2 seconds, less aggressive
