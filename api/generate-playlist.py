@@ -103,15 +103,20 @@ class handler(BaseHTTPRequestHandler):
         Music Preferences: {music_preferences}
         
         Ensure the playlist contains enough tracks to cover the entire class duration, with appropriate BPM and energy levels for each section.
+        
+        IMPORTANT: Use ONLY dashes (-) for track listings, NEVER use numbers (1., 2., 3., etc.).
                                                   
-        Format:
+        Format (use this exact format):
         WARMUP (X minutes)
+        - Artist - Song Title
         - Artist - Song Title
         
         FLOW/ACTIVE (X minutes)
         - Artist - Song Title
+        - Artist - Song Title
         
         COOLDOWN/SAVASANA (X minutes)
+        - Artist - Song Title
         - Artist - Song Title
         """)
         
@@ -123,7 +128,32 @@ class handler(BaseHTTPRequestHandler):
             "music_preferences": music_preferences
         })
         
-        return result.content.strip()
+        # Clean up any numbered lists that slip through
+        playlist_content = result.content.strip()
+        playlist_content = self._convert_numbers_to_dashes(playlist_content)
+        
+        return playlist_content
+    
+    def _convert_numbers_to_dashes(self, text):
+        """Convert numbered lists to dashed lists"""
+        import re
+        
+        # Pattern to match "1. Artist - Song" or "10. Artist - Song" etc.
+        # and replace with "- Artist - Song"
+        pattern = r'^\s*\d+\.\s+'
+        
+        lines = text.split('\n')
+        cleaned_lines = []
+        
+        for line in lines:
+            # If line starts with number followed by period, replace with dash
+            if re.match(pattern, line):
+                cleaned_line = re.sub(pattern, '- ', line)
+                cleaned_lines.append(cleaned_line)
+            else:
+                cleaned_lines.append(line)
+        
+        return '\n'.join(cleaned_lines)
 
     def _search_spotify_tracks(self, playlist_text):
         """Search Spotify for tracks mentioned in the playlist"""
