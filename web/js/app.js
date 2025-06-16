@@ -699,7 +699,20 @@ function showPlaylistReadyScreen(data, className) {
             color: white;
             animation: celebrationPulse 0.6s ease-out;
         ">
-            <div style="font-size: 4rem; margin-bottom: 20px; animation: giftBoxFloat 2s ease-in-out infinite;">
+            <div 
+                onclick="revealPlaylist()" 
+                style="
+                    font-size: 4rem; 
+                    margin-bottom: 20px; 
+                    animation: giftBoxFloat 2s ease-in-out infinite;
+                    cursor: pointer;
+                    transition: transform 0.2s ease;
+                    display: inline-block;
+                "
+                onmouseover="this.style.transform='scale(1.1)'"
+                onmouseout="this.style.transform='scale(1)'"
+                title="Click to unwrap your playlist!"
+            >
                 🎁
             </div>
             
