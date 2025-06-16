@@ -143,31 +143,52 @@ window.selectClassCard = function(card) {
 
 // Handle add custom class
 window.handleAddCustomClass = function() {
+    console.log('🔧 Custom class button clicked - checking authentication...');
+    
     // Check if user is connected to fairydust
-    // We'll check for the presence of fairydust SDK and connection
+    let isConnected = false;
     
     // First check if fairydust SDK is loaded
     if (typeof Fairydust === 'undefined') {
+        console.log('❌ fairydust SDK not loaded');
         showSuccessMessage('❌ fairydust SDK not loaded. Please refresh the page.', true);
         return;
     }
     
-    // Check if the global fairydust instance exists and user is authenticated
-    let isConnected = false;
+    // Try multiple ways to check authentication
+    // 1. Check if we have stored user data from onConnect
+    if (window.fairydustUser && window.fairydustUser.id) {
+        console.log('✅ User authenticated via stored user data:', window.fairydustUser.id);
+        isConnected = true;
+    }
     
-    // Try to access the fairydust instance that was created in the HTML script
-    // Look for it in the window scope or check the authentication status
-    if (window.fairydust && window.fairydust.getAPI && window.fairydust.getAPI().isAuthenticated) {
-        isConnected = window.fairydust.getAPI().isAuthenticated();
-    } else {
-        // Fallback: check if we can find authentication indicators in the DOM
+    // 2. Try the fairydust API if available
+    if (!isConnected && window.fairydust && window.fairydust.getAPI) {
+        try {
+            const api = window.fairydust.getAPI();
+            if (api.isAuthenticated && api.isAuthenticated()) {
+                console.log('✅ User authenticated via fairydust API');
+                isConnected = true;
+            }
+        } catch (error) {
+            console.log('Could not check fairydust API:', error);
+        }
+    }
+    
+    // 3. Fallback: check DOM for authentication indicators
+    if (!isConnected) {
         const accountDesktop = document.querySelector('#fairydust-account-desktop');
         const accountMobile = document.querySelector('#fairydust-account-mobile');
         
-        // Look for user info or balance indicators
         isConnected = (accountDesktop && (accountDesktop.textContent.includes('DUST') || accountDesktop.textContent.includes('@'))) || 
                      (accountMobile && (accountMobile.textContent.includes('DUST') || accountMobile.textContent.includes('@')));
+        
+        if (isConnected) {
+            console.log('✅ User authenticated via DOM check');
+        }
     }
+    
+    console.log('🔧 Final authentication result:', isConnected);
     
     if (!isConnected) {
         showSuccessMessage('🔐 Please connect with fairydust (top right) to add custom class types. Custom classes are tied to your account.', true);
@@ -187,6 +208,7 @@ window.handleAddCustomClass = function() {
     }
     
     // User is connected, show the custom class interface
+    console.log('✅ Showing custom class interface');
     showAddNewClassInterface();
 };
 
@@ -554,8 +576,8 @@ function populateClassSelect(classes) {
                     onclick="selectClassCard(this)"
                     style="
                         padding: 20px 15px;
-                        background: rgba(103, 58, 183, 0.15);
-                        border: 2px solid rgba(103, 58, 183, 0.3);
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 2px solid rgba(103, 58, 183, 0.4);
                         border-radius: 12px;
                         text-align: center;
                         cursor: pointer;
@@ -564,8 +586,8 @@ function populateClassSelect(classes) {
                         backdrop-filter: blur(10px);
                         position: relative;
                     "
-                    onmouseover="this.style.background='rgba(103, 58, 183, 0.25)'; this.style.transform='translateY(-2px)'"
-                    onmouseout="this.style.background='rgba(103, 58, 183, 0.15)'; this.style.transform='translateY(0)'"
+                    onmouseover="this.style.background='rgba(103, 58, 183, 0.15)'; this.style.transform='translateY(-2px)'"
+                    onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.transform='translateY(0)'"
                 >
                     ${yogaClass.name}
                     <div style="position: absolute; top: 5px; right: 5px; font-size: 0.7rem; opacity: 0.8;">✨</div>
