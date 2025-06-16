@@ -51,66 +51,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const authCode = getSpotifyAuthCodeFromURL();
     const pendingPlaylist = localStorage.getItem('pendingPlaylist');
     
-    console.log('🔍 Initial check - Auth code:', !!authCode, 'Pending playlist:', !!pendingPlaylist);
-    
     if (authCode && pendingPlaylist) {
-        console.log('🔄 Spotify auth code detected, processing playlist creation...');
-        // User has returned from Spotify - auto-create the playlist
-        setTimeout(() => {
-            try {
-                const playlistData = JSON.parse(pendingPlaylist);
-                console.log('📦 Pending playlist data:', playlistData);
-                createPlaylistWithAuthCodeForReturn(playlistData.playlistName, playlistData.trackIds, authCode);
-            } catch (error) {
-                console.error('❌ Error processing pending playlist:', error);
-                showSuccessMessage('❌ Error processing playlist data. Please try again.', true);
-            }
-        }, 1500); // Increased delay to ensure page is fully loaded
-    } else if (authCode && !pendingPlaylist) {
-        console.warn('⚠️ Auth code found but no pending playlist data');
-        // Check if we have the data in URL params (for cross-domain scenarios)
-        const urlParams = new URLSearchParams(window.location.search);
-        const state = urlParams.get('state');
-        
-        if (state) {
-            try {
-                // Decode state parameter if present
-                const stateData = JSON.parse(decodeURIComponent(state));
-                console.log('📦 Found state data in URL:', stateData);
-                
-                if (stateData.playlistName && stateData.trackIds) {
-                    console.log('🔄 Using state data to create playlist');
-                    createPlaylistWithAuthCodeForReturn(stateData.playlistName, stateData.trackIds, authCode);
-                    return;
-                }
-            } catch (e) {
-                console.error('Failed to parse state parameter:', e);
-            }
-        }
-        
-        // Check if we have currentPlaylistData (might be available if returning to same session)
-        if (currentPlaylistData && currentPlaylistData.spotify_integration && currentPlaylistData.spotify_integration.track_ids) {
-            console.log('📀 Found current playlist data in memory, attempting to create playlist...');
-            const trackIds = currentPlaylistData.spotify_integration.track_ids;
-            // Use a default name or extract from current data
-            const playlistName = currentPlaylistData.playlist_name || `Yoga Playlist - ${new Date().toISOString().split('T')[0]}`;
-            setTimeout(() => {
-                createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode);
-            }, 1500);
-        } else {
-            showSuccessMessage('⚠️ Spotify authorization received. To complete playlist creation:<br>1. Go back to where you generated the playlist<br>2. Click "Create Spotify Playlist" again<br><br>Or <button onclick="triggerManualPlaylistCreation()" style="background: #1db954; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Enter playlist details manually</button>', true);
-        }
-    } else if (!authCode && pendingPlaylist) {
-        console.log('ℹ️ Pending playlist found but no auth code - user may have navigated back');
-        // Clean up old pending data after 10 minutes
+        // User has returned from Spotify - create the playlist
+        console.log('🎵 Spotify authorization complete, creating playlist...');
         try {
-            const data = JSON.parse(pendingPlaylist);
-            if (data.timestamp && (Date.now() - data.timestamp) > 10 * 60 * 1000) {
-                console.log('🧹 Cleaning up old pending playlist data');
-                localStorage.removeItem('pendingPlaylist');
-            }
-        } catch (e) {
-            console.log('🧹 Cleaning up invalid pending playlist data');
+            const playlistData = JSON.parse(pendingPlaylist);
+            // Small delay to ensure page is ready
+            setTimeout(() => {
+                createSpotifyPlaylist(playlistData.playlistName, playlistData.trackIds, authCode);
+            }, 1000);
+        } catch (error) {
+            console.error('Error processing playlist data:', error);
+            showSuccessMessage('❌ Error creating playlist. Please try again.', true);
             localStorage.removeItem('pendingPlaylist');
         }
     }
@@ -486,71 +438,58 @@ function setGeneratingState(isGenerating) {
     }
 }
 
-async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode) {
+// Simple function to create Spotify playlist
+async function createSpotifyPlaylist(playlistName, trackIds, authCode) {
     try {
-        console.log('🎵 Starting playlist creation for return from Spotify...');
-        console.log('Playlist name:', playlistName);
-        console.log('Track IDs:', trackIds);
-        console.log('Auth code present:', !!authCode);
-        
         showSuccessMessage('🔄 Creating your Spotify playlist...');
-        
-        const requestBody = {
-            action: 'create_playlist',
-            playlist_name: playlistName,
-            track_ids: trackIds,
-            auth_code: authCode
-        };
-        console.log('📤 Sending playlist creation request:', {
-            ...requestBody,
-            auth_code: authCode ? `${authCode.substring(0, 10)}...` : null,
-            track_count: trackIds.length
-        });
         
         const response = await fetch(`${API_BASE_URL}/create-spotify-playlist`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify({
+                action: 'create_playlist',
+                playlist_name: playlistName,
+                track_ids: trackIds,
+                auth_code: authCode
+            })
         });
         
-        console.log('Response status:', response.status);
         const data = await response.json();
-        console.log('📡 Spotify API response:', data);
         
         if (data.success) {
-            console.log('✅ Playlist created successfully!');
             showSuccessMessage(`🎉 Success! Created playlist "${playlistName}". <a href="${data.playlist_url}" target="_blank">Open in Spotify</a>`);
             localStorage.removeItem('pendingPlaylist');
-            localStorage.removeItem('spotify_auth_code'); // Clean up stored auth code
             
-            // Also update the export result if it exists
+            // Update export button UI if visible
+            const exportBtn = document.getElementById('export-btn');
+            if (exportBtn) {
+                exportBtn.disabled = false;
+                exportBtn.textContent = 'Create Spotify Playlist';
+            }
+            
+            // Update export result if visible
             const exportResult = document.getElementById('export-result');
             if (exportResult) {
                 exportResult.className = 'success';
                 exportResult.innerHTML = `
                     <strong>🎉 Success!</strong><br>
-                    ${data.message}<br>
                     <a href="${data.playlist_url}" target="_blank">Open in Spotify</a>
                 `;
             }
+        } else if (data.needs_auth) {
+            // This shouldn't happen if we have an auth code, but just in case
+            await initiateSpotifyAuth(playlistName, trackIds);
         } else {
-            console.error('❌ Playlist creation failed:', data.error || data.message || 'Unknown error');
-            showSuccessMessage(`❌ Error: ${data.error || data.message || 'Failed to create playlist'}`, true);
-            
-            // If auth code expired, offer to re-authenticate
-            if (data.error && data.error.includes('invalid_grant')) {
-                console.log('Auth code may have expired, clearing stored code');
-                localStorage.removeItem('spotify_auth_code');
-                showSuccessMessage(`❌ Authorization expired. Please try "Create Spotify Playlist" again to re-authenticate.`, true);
-            }
+            showSuccessMessage(`❌ Error: ${data.error || 'Failed to create playlist'}`, true);
+            localStorage.removeItem('pendingPlaylist');
         }
         
     } catch (error) {
-        console.error('❌ Network error during playlist creation:', error);
-        console.error('Error details:', error.stack);
-        showSuccessMessage(`❌ Network error: ${error.message}`, true);
+        console.error('Network error:', error);
+        showSuccessMessage(`❌ Network error. Please try again.`, true);
+        localStorage.removeItem('pendingPlaylist');
     }
 }
 
@@ -657,14 +596,18 @@ async function handleSpotifyExport() {
         return;
     }
     
-    // Get track IDs
+    // Get track IDs - ensure they're in the correct format
     let trackIds = [];
     if (currentPlaylistData.spotify_integration.track_ids) {
         trackIds = currentPlaylistData.spotify_integration.track_ids;
     } else if (currentPlaylistData.spotify_integration.search_results && 
                currentPlaylistData.spotify_integration.search_results.successful_tracks) {
         trackIds = currentPlaylistData.spotify_integration.search_results.successful_tracks.map(
-            track => track.spotify_data.spotify_id
+            track => {
+                // Ensure we have the full Spotify URI
+                const id = track.spotify_data.spotify_id;
+                return id.startsWith('spotify:track:') ? id : `spotify:track:${id}`;
+            }
         );
     }
     
@@ -678,7 +621,7 @@ async function handleSpotifyExport() {
     
     if (authCode) {
         // User has returned from Spotify authorization - create playlist
-        await createPlaylistWithAuthCode(playlistName, trackIds, authCode);
+        await createSpotifyPlaylist(playlistName, trackIds, authCode);
     } else {
         // No auth code - need to get Spotify authorization first
         await initiateSpotifyAuth(playlistName, trackIds);
@@ -825,98 +768,18 @@ window.dismissSuccessMessage = function() {
     }
 };
 
-async function createPlaylistWithAuthCode(playlistName, trackIds, authCode) {
-    const currentExportBtn = document.getElementById('export-btn');
-    const currentExportResult = document.getElementById('export-result');
-    
-    try {
-        // Show loading state
-        currentExportBtn.disabled = true;
-        currentExportBtn.textContent = '🔄 Creating Spotify Playlist...';
-        
-        const requestBody = {
-            action: 'create_playlist',
-            playlist_name: playlistName,
-            track_ids: trackIds,
-            auth_code: authCode
-        };
-        console.log('📤 Sending playlist creation request (from export):', {
-            ...requestBody,
-            auth_code: authCode ? `${authCode.substring(0, 10)}...` : null,
-            track_count: trackIds.length
-        });
-        
-        const response = await fetch(`${API_BASE_URL}/create-spotify-playlist`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody)
-        });
-        
-        const data = await response.json();
-        console.log('📡 Spotify API response (from export):', data);
-        
-        if (data.success) {
-            currentExportResult.className = 'success';
-            currentExportResult.innerHTML = `
-                <strong>🎉 Success!</strong><br>
-                ${data.message}<br>
-                <a href="${data.playlist_url}" target="_blank">Open in Spotify</a>
-            `;
-            
-            // Clear stored playlist data
-            localStorage.removeItem('pendingPlaylist');
-            localStorage.removeItem('spotify_auth_code'); // Clean up stored auth code
-            
-        } else if (data.needs_auth) {
-            // Still needs authorization
-            await initiateSpotifyAuth(playlistName, trackIds);
-        } else {
-            displayExportError(data.error || 'Failed to create playlist');
-        }
-        
-    } catch (error) {
-        console.error('Error creating Spotify playlist:', error);
-        displayExportError('Network error - please try again');
-    } finally {
-        currentExportBtn.disabled = false;
-        currentExportBtn.textContent = 'Create Spotify Playlist';
-    }
-}
+// Removed - using createSpotifyPlaylist instead
 
 function getSpotifyAuthCodeFromURL() {
-    // Check if there's an auth code in the URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    const error = urlParams.get('error');
-    
-    console.log('🔍 Checking URL for Spotify auth code...');
-    console.log('Current URL:', window.location.href);
-    console.log('URL params:', urlParams.toString());
-    console.log('Auth code found:', code);
-    console.log('Error parameter:', error);
-    
-    if (error) {
-        console.error('❌ Spotify authorization error:', error);
-        showSuccessMessage(`❌ Spotify authorization failed: ${error}`, true);
-        return null;
-    }
     
     if (code) {
-        console.log('✅ Auth code found, storing and cleaning up URL...');
-        // Store auth code in localStorage for potential reuse
-        localStorage.setItem('spotify_auth_code', code);
-        // Don't clean URL immediately - let the page fully process first
-        // Clean up the URL after a short delay
-        setTimeout(() => {
-            window.history.replaceState({}, document.title, window.location.pathname);
-            console.log('🧹 URL cleaned');
-        }, 2000);
+        // Clean up the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
         return code;
     }
     
-    console.log('ℹ️ No auth code in URL');
     return null;
 }
 
@@ -951,65 +814,7 @@ function displayExportError(message) {
     `;
 }
 
-// Manual trigger for playlist creation when automatic flow fails
-window.triggerManualPlaylistCreation = function() {
-    console.log('🔧 Manual playlist creation triggered');
-    console.log('Current URL:', window.location.href);
-    console.log('URL search params:', window.location.search);
-    
-    // Check if we have a current playlist and auth code
-    const authCode = getSpotifyAuthCodeFromURL();
-    console.log('Auth code retrieved:', authCode);
-    
-    if (!authCode) {
-        // Let's check if there's an auth code that was already cleaned from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentCode = urlParams.get('code');
-        console.log('Current code in URL:', currentCode);
-        
-        // Check localStorage for any stored auth code
-        const storedAuthCode = localStorage.getItem('spotify_auth_code');
-        console.log('Stored auth code:', storedAuthCode);
-        
-        if (storedAuthCode) {
-            console.log('Using stored auth code');
-            proceedWithPlaylistCreation(storedAuthCode);
-        } else {
-            showSuccessMessage('❌ No authorization code found. The URL may have been cleaned already. Please try the Spotify authorization process again from the beginning.', true);
-        }
-        return;
-    }
-    
-    // Store the auth code for potential reuse
-    localStorage.setItem('spotify_auth_code', authCode);
-    proceedWithPlaylistCreation(authCode);
-};
-
-function proceedWithPlaylistCreation(authCode) {
-    // Prompt for playlist details
-    const playlistName = prompt('Enter playlist name:', 'My Yoga Playlist - ' + new Date().toISOString().split('T')[0]);
-    if (!playlistName) return;
-    
-    // Check if we have current playlist data
-    if (currentPlaylistData && currentPlaylistData.spotify_integration && currentPlaylistData.spotify_integration.track_ids) {
-        const trackIds = currentPlaylistData.spotify_integration.track_ids;
-        createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authCode);
-    } else {
-        // No current playlist data - offer to create a simple playlist
-        const createSimple = confirm('No playlist data found. Would you like to create a simple test playlist with a few popular yoga tracks?');
-        if (createSimple) {
-            // Use some default popular yoga/meditation tracks
-            const defaultTracks = [
-                'spotify:track:3ZffCQKLFLUvYM59XKLbVm', // Breathing meditation track
-                'spotify:track:4J8pGGPMAUHJqpAjT3qsmg', // Peaceful yoga track
-                'spotify:track:2RJf4nqh6HXNM0S2PCPeOl'  // Relaxation track
-            ];
-            createPlaylistWithAuthCodeForReturn(playlistName, defaultTracks, authCode);
-        } else {
-            showSuccessMessage('❌ Please generate a playlist first, then export to Spotify.', true);
-        }
-    }
-}
+// Removed manual trigger - keeping the flow simple
 
 // Debug function to check Spotify auth state
 window.debugSpotifyAuth = function() {
