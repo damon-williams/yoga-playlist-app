@@ -8,14 +8,37 @@ window.posthog = {
 };
 */
 
+// Queue for events that fire before PostHog is ready
+let posthogEventQueue = [];
+
 // Safe PostHog capture function
 function captureEvent(eventName, properties) {
     if (typeof posthog !== 'undefined' && posthog.capture) {
         posthog.capture(eventName, properties);
     } else {
-        console.log('PostHog not ready - would have tracked:', eventName, properties);
+        console.log('PostHog not ready - queuing event:', eventName);
+        posthogEventQueue.push({ eventName, properties });
     }
 }
+
+// Process queued events once PostHog is ready
+function processPosthogQueue() {
+    if (typeof posthog !== 'undefined' && posthog.capture && posthogEventQueue.length > 0) {
+        console.log(`Processing ${posthogEventQueue.length} queued PostHog events`);
+        posthogEventQueue.forEach(event => {
+            posthog.capture(event.eventName, event.properties);
+        });
+        posthogEventQueue = [];
+    }
+}
+
+// Check for PostHog readiness periodically
+let posthogCheckInterval = setInterval(() => {
+    if (typeof posthog !== 'undefined' && posthog.capture) {
+        processPosthogQueue();
+        clearInterval(posthogCheckInterval);
+    }
+}, 500);
 
 // Configuration
 const API_BASE_URL = '/api';
