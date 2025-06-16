@@ -86,20 +86,30 @@ function setupEventListeners() {
 
 // Handle class card selection
 window.selectClassCard = function(card) {
+    // Skip if this is the custom card
+    if (card.classList.contains('add-custom-card')) {
+        return;
+    }
+    
     // Remove previous selection
     document.querySelectorAll('.class-card').forEach(c => {
+        c.classList.remove('selected');
         c.style.background = 'rgba(255, 255, 255, 0.1)';
         c.style.borderColor = 'rgba(255, 255, 255, 0.2)';
     });
     
     // Highlight selected card
+    card.classList.add('selected');
     card.style.background = 'rgba(103, 58, 183, 0.3)';
     card.style.borderColor = 'rgba(103, 58, 183, 0.8)';
     
     // Set hidden input value
     const className = card.getAttribute('data-class-name');
     const description = card.getAttribute('data-description');
-    document.getElementById('class-type').value = className;
+    const hiddenInput = document.getElementById('class-type');
+    if (hiddenInput) {
+        hiddenInput.value = className;
+    }
     
     // Pre-populate music preferences based on class type
     const musicSuggestions = {
@@ -127,21 +137,8 @@ window.selectClassCard = function(card) {
 
 // Handle add custom class
 window.handleAddCustomClass = function() {
-    // Check if user is logged in with fairydust
-    const fairydust = window.fairydust || window.Fairydust?.instance;
-    
-    if (!fairydust || !fairydust.isConnected || !fairydust.isConnected()) {
-        showSuccessMessage('🔐 Please connect with fairydust (top right) to add custom class types', true);
-        // Highlight the account component
-        const accountComponent = document.querySelector('#fairydust-account-desktop, #fairydust-account-mobile');
-        if (accountComponent) {
-            accountComponent.style.animation = 'pulse 1s ease-in-out 3';
-        }
-        return;
-    }
-    
-    // User is logged in, show the interface
-    showAddNewClassInterface();
+    // For now, just show a message about custom classes being a future feature
+    showSuccessMessage('🚧 Custom class types coming soon! This will require fairydust authentication.', false);
 };
 
 function handleClassTypeChange() {
@@ -417,7 +414,7 @@ async function handlePlaylistGeneration(event) {
     event.preventDefault();
     
     // Get the selected class card's description
-    const selectedCard = document.querySelector('.class-card[style*="103, 58, 183"]');
+    const selectedCard = document.querySelector('.class-card[data-class-name="' + classTypeSelect.value + '"]');
     const classDescription = selectedCard ? selectedCard.getAttribute('data-description') : '';
 
     const formData = {
@@ -437,7 +434,7 @@ async function handlePlaylistGeneration(event) {
             }
         });
 
-        showSuccessMessage('❌ Please select a class type by clicking on a card above', true);
+        showSuccessMessage('❌ Please select a class type by clicking on one of the class cards above', true);
         return;
     }
     
