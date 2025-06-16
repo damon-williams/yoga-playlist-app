@@ -7,15 +7,19 @@ To ensure Spotify OAuth works correctly, please verify these settings in your Sp
 2. Log in and select your app
 
 ## 2. Verify Redirect URIs
-In your app settings, make sure you have the following redirect URI added:
+In your app settings, you need to add ALL domains where your app is hosted. Add these redirect URIs:
 ```
 https://yoga-playlist-app.vercel.app/
+https://apps.greenwork.ai/playlist-generator/
 ```
 
-**Important**: The redirect URI must match EXACTLY, including:
+**Important**: Each redirect URI must match EXACTLY, including:
 - The protocol (https://)
-- The domain (yoga-playlist-app.vercel.app)
+- The domain (yoga-playlist-app.vercel.app or apps.greenwork.ai)
+- The path (if any, like /playlist-generator/)
 - The trailing slash (/)
+
+**Note**: The app now automatically detects which domain you're using and adjusts the redirect URI accordingly.
 
 ## 3. Check Environment Variables
 Ensure these are set in your Vercel dashboard:

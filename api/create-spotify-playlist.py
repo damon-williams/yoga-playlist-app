@@ -42,11 +42,26 @@ class handler(BaseHTTPRequestHandler):
             client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
             redirect_uri = os.getenv("SPOTIFY_REDIRECT_URI")
             
-            # If no redirect URI in env, use default
+            # If no redirect URI in env, determine from request headers
             if not redirect_uri:
-                redirect_uri = "https://yoga-playlist-app.vercel.app/"
+                # Try to get the origin from the request
+                origin = self.headers.get('Origin', '')
+                referer = self.headers.get('Referer', '')
+                
+                if origin and origin.startswith('https://'):
+                    redirect_uri = origin + '/'
+                elif referer and referer.startswith('https://'):
+                    # Extract base URL from referer
+                    from urllib.parse import urlparse
+                    parsed = urlparse(referer)
+                    redirect_uri = f"{parsed.scheme}://{parsed.netloc}/"
+                else:
+                    # Fallback to default
+                    redirect_uri = "https://yoga-playlist-app.vercel.app/"
             
             print(f"[DEBUG] Using redirect URI: {redirect_uri}")
+            print(f"[DEBUG] Origin header: {self.headers.get('Origin', 'None')}")
+            print(f"[DEBUG] Referer header: {self.headers.get('Referer', 'None')}")
             
             if not client_id or not client_secret:
                 response = {
@@ -115,7 +130,23 @@ class handler(BaseHTTPRequestHandler):
             # Create playlist with auth code
             client_id = os.getenv("SPOTIFY_CLIENT_ID")
             client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
-            redirect_uri = os.getenv("SPOTIFY_REDIRECT_URI", "https://yoga-playlist-app.vercel.app/")
+            redirect_uri = os.getenv("SPOTIFY_REDIRECT_URI")
+            
+            # If no redirect URI in env, determine from request headers (same logic as auth URL)
+            if not redirect_uri:
+                origin = self.headers.get('Origin', '')
+                referer = self.headers.get('Referer', '')
+                
+                if origin and origin.startswith('https://'):
+                    redirect_uri = origin + '/'
+                elif referer and referer.startswith('https://'):
+                    from urllib.parse import urlparse
+                    parsed = urlparse(referer)
+                    redirect_uri = f"{parsed.scheme}://{parsed.netloc}/"
+                else:
+                    redirect_uri = "https://yoga-playlist-app.vercel.app/"
+            
+            print(f"[DEBUG] Token exchange using redirect URI: {redirect_uri}")
             
             sp_oauth = SpotifyOAuth(
                 client_id=client_id,
