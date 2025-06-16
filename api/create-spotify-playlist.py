@@ -20,6 +20,8 @@ class handler(BaseHTTPRequestHandler):
         # Check if this is an auth callback or playlist creation
         action = data.get('action', 'create_playlist')
         
+        print(f"[DEBUG] Received action: {action}")
+        
         if action == 'get_auth_url':
             self._handle_get_auth_url()
         elif action == 'create_playlist':
@@ -43,6 +45,8 @@ class handler(BaseHTTPRequestHandler):
             # If no redirect URI in env, use default
             if not redirect_uri:
                 redirect_uri = "https://yoga-playlist-app.vercel.app/"
+            
+            print(f"[DEBUG] Using redirect URI: {redirect_uri}")
             
             if not client_id or not client_secret:
                 response = {
@@ -89,8 +93,11 @@ class handler(BaseHTTPRequestHandler):
             track_ids = data['track_ids']
             auth_code = data.get('auth_code')
             
+            print(f"[DEBUG] Create playlist request - Name: {playlist_name}, Tracks: {len(track_ids)}, Has auth code: {bool(auth_code)}")
+            
             if not auth_code:
                 # No auth code - need to get authorization first
+                print("[DEBUG] No auth code provided, requesting authorization")
                 response = {
                     "success": False,
                     "needs_auth": True,
@@ -119,9 +126,17 @@ class handler(BaseHTTPRequestHandler):
             )
             
             # Get access token from auth code
-            token_info = sp_oauth.get_access_token(auth_code)
+            print(f"[DEBUG] Attempting to get access token with auth code: {auth_code[:10]}...")
+            try:
+                token_info = sp_oauth.get_access_token(auth_code)
+                print(f"[DEBUG] Token info received: {bool(token_info)}")
+            except Exception as token_error:
+                print(f"[ERROR] Failed to get access token: {str(token_error)}")
+                self._send_error(f"Failed to get access token: {str(token_error)}", 400)
+                return
             
             if not token_info:
+                print("[ERROR] Token info is None")
                 self._send_error("Failed to get access token", 400)
                 return
             
