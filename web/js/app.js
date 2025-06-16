@@ -1,9 +1,12 @@
-// Disable PostHog temporarily
+// PostHog is now enabled
+// To disable, uncomment the following:
+/*
 window.posthog = {
     capture: function() {
         console.log('PostHog disabled - would have tracked:', arguments);
     }
 };
+*/
 
 // Configuration
 const API_BASE_URL = '/api';
