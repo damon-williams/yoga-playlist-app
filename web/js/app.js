@@ -460,17 +460,24 @@ async function createPlaylistWithAuthCodeForReturn(playlistName, trackIds, authC
         console.log('🎵 Starting playlist creation for return from Spotify...');
         showSuccessMessage('🔄 Creating your Spotify playlist...');
         
+        const requestBody = {
+            action: 'create_playlist',
+            playlist_name: playlistName,
+            track_ids: trackIds,
+            auth_code: authCode
+        };
+        console.log('📤 Sending playlist creation request:', {
+            ...requestBody,
+            auth_code: authCode ? `${authCode.substring(0, 10)}...` : null,
+            track_count: trackIds.length
+        });
+        
         const response = await fetch(`${API_BASE_URL}/create-spotify-playlist`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                action: 'create_playlist',
-                playlist_name: playlistName,
-                track_ids: trackIds,
-                auth_code: authCode
-            })
+            body: JSON.stringify(requestBody)
         });
         
         const data = await response.json();
@@ -783,20 +790,28 @@ async function createPlaylistWithAuthCode(playlistName, trackIds, authCode) {
         currentExportBtn.disabled = true;
         currentExportBtn.textContent = '🔄 Creating Spotify Playlist...';
         
+        const requestBody = {
+            action: 'create_playlist',
+            playlist_name: playlistName,
+            track_ids: trackIds,
+            auth_code: authCode
+        };
+        console.log('📤 Sending playlist creation request (from export):', {
+            ...requestBody,
+            auth_code: authCode ? `${authCode.substring(0, 10)}...` : null,
+            track_count: trackIds.length
+        });
+        
         const response = await fetch(`${API_BASE_URL}/create-spotify-playlist`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                action: 'create_playlist',
-                playlist_name: playlistName,
-                track_ids: trackIds,
-                auth_code: authCode
-            })
+            body: JSON.stringify(requestBody)
         });
         
         const data = await response.json();
+        console.log('📡 Spotify API response (from export):', data);
         
         if (data.success) {
             currentExportResult.className = 'success';
