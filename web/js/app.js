@@ -608,8 +608,8 @@ function populateClassSelect(classes) {
                         backdrop-filter: blur(10px);
                         position: relative;
                     "
-                    onmouseover="this.style.background='rgba(103, 58, 183, 0.15)'; this.style.borderColor='rgba(103, 58, 183, 0.4)'; this.style.transform='translateY(-2px)'"
-                    onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.borderColor='rgba(255, 255, 255, 0.2)'; this.style.transform='translateY(0)'"
+                    onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'; this.style.transform='translateY(-2px)'"
+                    onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.transform='translateY(0)'"
                 >
                     ${yogaClass.name}
                     <div style="position: absolute; top: 5px; right: 5px; font-size: 0.7rem; opacity: 0.8;">✨</div>
